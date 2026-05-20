@@ -141,7 +141,7 @@ export function TorneoCard({ torneo, canInscribirse, yaInscripto }: TorneoCardPr
             <Ticket className="mt-0.5 size-4 text-white/70" />
             <div>
               <dt className="font-medium text-white/90">Entrada</dt>
-              <dd>{torneo.costo_entrada === 0 ? "Gratis" : `$${torneo.costo_entrada.toFixed(2)}`}</dd>
+              <dd>{torneo.costo_entrada === 0 ? "Gratis" : `$${torneo.costo_entrada.toLocaleString("es-CL")}`}</dd>
             </div>
           </div>
         </dl>
