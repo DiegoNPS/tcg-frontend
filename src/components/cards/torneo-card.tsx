@@ -158,7 +158,7 @@ export function TorneoCard({ torneo, canInscribirse, yaInscripto }: TorneoCardPr
 
         {!mapsEmbedUrl && mapsLink ? (
           <a
-            className="text-xs font-medium text-white underline underline-offset-4"
+            className="block w-fit text-xs font-medium text-white underline underline-offset-4"
             href={mapsLink}
             rel="noreferrer"
             target="_blank"
@@ -182,7 +182,7 @@ export function TorneoCard({ torneo, canInscribirse, yaInscripto }: TorneoCardPr
         ) : null}
 
         {!canInscribirse ? (
-          <Link href={loginHref} className="text-xs font-medium text-white underline underline-offset-4">
+          <Link href={loginHref} className="block w-fit text-xs font-medium text-white underline underline-offset-4">
             Inicia sesion para inscribirte
           </Link>
         ) : null}

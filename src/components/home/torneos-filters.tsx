@@ -97,7 +97,7 @@ export function TorneosFilters({ initialValues, juegos }: TorneosFiltersProps) {
           <input
             defaultValue={initialValues.ciudad}
             onBlur={(event) => updateParam("ciudad", event.target.value.trim())}
-            placeholder="Ej: Madrid"
+            placeholder="Ej: Santiago"
             className="rounded-xl border border-zinc-300 px-3 py-2 outline-none transition focus:border-zinc-900"
           />
         </label>
