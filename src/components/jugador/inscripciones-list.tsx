@@ -20,8 +20,8 @@ type EntryInfo = {
 const statusLabels: Record<string, string> = {
   registered: "Registrado",
   waitlisted: "En espera",
-  checked_in: "Check-in",
-  seeded: "Seeded",
+  checked_in: "Ingreso confirmado",
+  seeded: "Asignado a llave",
   dropped: "Cancelado",
   eliminated: "Eliminado",
 };
@@ -87,7 +87,7 @@ export function InscripcionesList({ entries }: { entries: EntryInfo[] }) {
     const costoLabel = torneo?.costo_entrada ? `$${torneo.costo_entrada.toLocaleString("es-CL")}` : "Gratis";
 
     return (
-      <li key={entry.id} className="flex flex-col gap-3 rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm md:flex-row md:items-center md:justify-between">
+      <li key={entry.id} className="ui-card-soft flex flex-col gap-3 rounded-lg px-4 py-3 text-sm md:flex-row md:items-center md:justify-between">
         <div>
           <p className="font-medium text-zinc-900">{torneo?.titulo ?? "Torneo eliminado"}</p>
           <p className="text-zinc-600">
@@ -122,7 +122,7 @@ export function InscripcionesList({ entries }: { entries: EntryInfo[] }) {
   return (
     <div className="space-y-6">
       {message ? (
-        <p className="rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm text-zinc-700 shadow-sm">
+        <p className="ui-alert ui-alert-success">
           {message}
         </p>
       ) : null}

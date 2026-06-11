@@ -160,7 +160,7 @@ export function DireccionAutocomplete({
             }}
             placeholder={placeholder}
             autoComplete="off"
-            className="rounded-xl border border-zinc-300 px-3 py-2.5 outline-none transition focus:border-zinc-900 aria-[invalid]:border-rose-400"
+            className="ui-field aria-[invalid]:border-rose-400"
             aria-invalid={!!error || undefined}
           />
           {error ? <span className="text-xs text-rose-600">{error}</span> : null}
@@ -169,7 +169,7 @@ export function DireccionAutocomplete({
         {showMap ? (
           <div
             ref={mapRef}
-            className={coords ? "h-48 w-full overflow-hidden rounded-xl border border-zinc-200" : "hidden"}
+            className={coords ? "h-48 w-full overflow-hidden rounded-lg border border-zinc-200" : "hidden"}
           />
         ) : null}
       </div>

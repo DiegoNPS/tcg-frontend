@@ -36,9 +36,10 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
     <main className="mx-auto flex w-full max-w-xl flex-1 flex-col justify-center px-4 py-10">
       <div className="space-y-6">
         <div className="space-y-2">
-          <h1 className="text-2xl font-bold tracking-tight text-zinc-900">Accede a TCG Torneos</h1>
+          <p className="text-xs font-semibold uppercase text-zinc-500">Cuenta</p>
+          <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">Accede a TCG Hub</h1>
           <p className="text-sm text-zinc-600">
-            Inicia sesión con tu cuenta (email/contraseña) o con Google.
+            Inicia sesión con tu cuenta (correo y contraseña) o con Google.
           </p>
         </div>
 
@@ -53,7 +54,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         <p className="text-sm text-zinc-600">
           No tienes cuenta?{" "}
           <Link href="/signup" className="font-medium text-zinc-900 underline underline-offset-4">
-            Registrate
+            Regístrate
           </Link>
           .
         </p>
@@ -61,7 +62,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         <p className="text-sm text-zinc-600">
           Volver a{" "}
           <Link href="/" className="font-medium text-zinc-900 underline underline-offset-4">
-            torneos publicos
+            torneos públicos
           </Link>
           .
         </p>

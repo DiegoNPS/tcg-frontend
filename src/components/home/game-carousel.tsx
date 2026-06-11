@@ -2,7 +2,7 @@
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type GameCarouselItem = {
   label: string;
@@ -16,6 +16,7 @@ type GameCarouselProps = {
 
 export function GameCarousel({ items }: GameCarouselProps) {
   const listRef = useRef<HTMLDivElement | null>(null);
+  const [isPaused, setIsPaused] = useState(false);
 
   const scrollByAmount = (direction: "left" | "right") => {
     if (!listRef.current) return;
@@ -26,17 +27,46 @@ export function GameCarousel({ items }: GameCarouselProps) {
     listRef.current.scrollBy({ left: delta, behavior: "smooth" });
   };
 
+  useEffect(() => {
+    if (isPaused || items.length <= 1) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    const interval = window.setInterval(() => {
+      const list = listRef.current;
+      if (!list) return;
+
+      const nearEnd = list.scrollLeft + list.clientWidth >= list.scrollWidth - 16;
+      if (nearEnd) {
+        list.scrollTo({ left: 0, behavior: "smooth" });
+        return;
+      }
+
+      list.scrollBy({
+        left: Math.min(list.clientWidth * 0.72, 320),
+        behavior: "smooth",
+      });
+    }, 3200);
+
+    return () => window.clearInterval(interval);
+  }, [isPaused, items.length]);
+
   return (
-    <div className="relative">
+    <div
+      className="relative min-w-0 max-w-full"
+      onFocus={() => setIsPaused(true)}
+      onBlur={() => setIsPaused(false)}
+      onMouseEnter={() => setIsPaused(true)}
+      onMouseLeave={() => setIsPaused(false)}
+    >
       <div
         ref={listRef}
-        className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-2 pt-1"
+        className="flex min-w-0 max-w-full snap-x snap-mandatory gap-4 overflow-x-auto overscroll-x-contain pb-3 pt-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {items.map((item) => (
           <Link
             key={item.href}
             aria-label={`Ver torneos de ${item.label}`}
-            className="group relative h-44 min-w-[220px] snap-start overflow-hidden rounded-2xl border border-zinc-200 transition hover:-translate-y-0.5 hover:border-zinc-400 hover:shadow-md sm:min-w-[240px]"
+            className="group relative h-48 min-w-[230px] max-w-[calc(100vw-2rem)] snap-start overflow-hidden rounded-lg border border-zinc-200 transition hover:-translate-y-0.5 hover:border-[var(--accent)] hover:shadow-[0_16px_40px_rgba(106,169,245,0.18)] sm:min-w-[270px]"
             href={item.href}
             style={{
               backgroundImage: item.backgroundImage,
@@ -45,7 +75,10 @@ export function GameCarousel({ items }: GameCarouselProps) {
             }}
             title={item.label}
           >
-            <span className="sr-only">{item.label}</span>
+            <span className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 bg-gradient-to-t from-black/90 via-black/55 to-transparent px-4 pb-4 pt-16 text-sm font-semibold text-white">
+              <span className="text-clamp-2">{item.label}</span>
+              <span className="ui-badge-accent shrink-0 rounded-full px-2 py-0.5 text-[11px]">Torneos</span>
+            </span>
           </Link>
         ))}
       </div>

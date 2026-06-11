@@ -56,11 +56,11 @@ export const COMUNAS_RM: string[] = [
 ];
 
 export const TCG_OPTIONS: { value: TcgJuego; label: string }[] = [
-  { value: "pokemon", label: "Pokemon TCG" },
+  { value: "pokemon", label: "Pokémon TCG" },
   { value: "yugioh", label: "Yu-Gi-Oh!" },
   { value: "magic", label: "Magic: The Gathering" },
-  { value: "one_piece", label: "One Piece Card Game" },
-  { value: "digimon", label: "Digimon Card Game" },
+  { value: "one_piece", label: "Juego de cartas One Piece" },
+  { value: "digimon", label: "Juego de cartas Digimon" },
   { value: "lorcana", label: "Disney Lorcana" },
   { value: "otro", label: "Otro" },
 ];

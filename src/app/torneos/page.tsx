@@ -1,7 +1,10 @@
-import { cookies, headers } from "next/headers";
+import { cookies } from "next/headers";
+import { CalendarDays, MapPin, Search } from "lucide-react";
 
 import { TorneoCard } from "@/components/cards/torneo-card";
 import { TorneosFilters } from "@/components/home/torneos-filters";
+import { NoticeToast } from "@/components/ui/notice-toast";
+import { resolveServerApiBaseUrl } from "@/lib/api/base-url";
 import { CATEGORIA_OPTIONS, TCG_OPTIONS } from "@/lib/constants";
 import type { CategoriaTorneo } from "@/types/database.types";
 
@@ -61,16 +64,25 @@ const inscripcionMessages: Record<string, string> = {
   "torneo-invalido": "El torneo solicitado no es valido.",
 };
 
-async function resolveBaseUrl(): Promise<string | null> {
-  const envBase = process.env.NEXT_PUBLIC_APP_URL?.trim();
-  if (envBase) return envBase.replace(/\/$/, "");
+function resolveNoticeTone(code?: string) {
+  switch (code) {
+    case "ok":
+      return "success";
+    case "existente":
+      return "warning";
+    case "no-jugador":
+      return "warning";
+    case "torneo-invalido":
+      return "error";
+    case "error":
+      return "error";
+    default:
+      return "info";
+  }
+}
 
-  const h = await headers();
-  const host = h.get("host");
-  if (!host) return null;
-
-  const proto = h.get("x-forwarded-proto") ?? "http";
-  return `${proto}://${host}`;
+function getCurrentTimestamp() {
+  return Date.now();
 }
 
 export default async function TorneosPage({ searchParams }: TorneosPageProps) {
@@ -85,14 +97,14 @@ export default async function TorneosPage({ searchParams }: TorneosPageProps) {
     categoriaRaw && isCategoriaTorneo(categoriaRaw) ? categoriaRaw : "";
   const ciudad = ciudadRaw?.trim() ?? "";
 
-  const baseUrl = await resolveBaseUrl();
+  const baseUrl = await resolveServerApiBaseUrl();
 
   if (!baseUrl) {
     return (
-      <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-4 py-10">
+      <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col px-4 py-8">
         <h1 className="text-3xl font-bold tracking-tight text-zinc-900">Torneos TCG</h1>
-        <p className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-          Configura NEXT_PUBLIC_APP_URL para que la pagina pueda llamar a la API.
+        <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          Configura BACKEND_URL para que la pagina pueda llamar a la API.
         </p>
       </main>
     );
@@ -166,6 +178,22 @@ export default async function TorneosPage({ searchParams }: TorneosPageProps) {
     tiendaNombre: t.tienda_nombre ?? "Tienda independiente",
   }));
 
+  const now = getCurrentTimestamp();
+  const torneosConEstado = enrichedTorneos.map((torneo) => {
+    const startsAt = new Date(torneo.fecha_inicio).getTime();
+    const isPast = Number.isFinite(startsAt) && startsAt < now;
+
+    return {
+      ...torneo,
+      isPast,
+    };
+  });
+  const proximosTorneos = torneosConEstado.filter((torneo) => !torneo.isPast);
+  const torneosFinalizados = torneosConEstado.filter((torneo) => torneo.isPast);
+  const selectedGameLabel = juego
+    ? gameOptions.find((option) => option.value === juego)?.label ?? juego
+    : "Todos";
+
   const torneosInscritos = new Set<string>();
   let userLoggedIn = false;
 
@@ -191,55 +219,143 @@ export default async function TorneosPage({ searchParams }: TorneosPageProps) {
   } catch {}
 
   return (
-    <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-4 py-10">
-      <header className="space-y-2">
-        <p className="text-sm font-semibold uppercase tracking-wide text-zinc-500">
-          Calendario publico
-        </p>
-        <h1 className="text-3xl font-bold tracking-tight text-zinc-900">Torneos TCG</h1>
-        <p className="max-w-2xl text-sm text-zinc-600">
-          Descubre eventos de Pokemon, Yu-Gi-Oh!, Magic y mas. Filtra por juego y ciudad para encontrar tu proxima fecha.
-        </p>
-      </header>
+    <main className="flex flex-1 flex-col">
+      <section className="border-b border-zinc-200">
+        <div className="ui-shell py-7">
+          <div className="grid min-w-0 gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,28rem)] lg:items-end">
+            <div>
+              <p className="ui-eyebrow">Eventos</p>
+              <h1 className="mt-2 text-3xl font-black tracking-tight text-zinc-900 sm:text-5xl">Torneos TCG</h1>
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-600">
+                Explora torneos publicados por tiendas, prioriza fechas próximas y revisa el historial sin mezclar eventos vencidos.
+              </p>
+            </div>
 
-      {inscripcionCode ? (
-        <p className="rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm text-zinc-700 shadow-sm">
-          {inscripcionMessages[inscripcionCode] ?? "Estado de inscripcion actualizado."}
-        </p>
-      ) : null}
+            <div className="grid grid-cols-3 gap-2 text-center">
+              <div className="ui-card-soft rounded-lg px-3 py-3">
+                <p className="text-2xl font-black text-zinc-900">{proximosTorneos.length}</p>
+                <p className="text-[11px] font-semibold uppercase text-zinc-500">Activos</p>
+              </div>
+              <div className="ui-card-soft rounded-lg px-3 py-3">
+                <p className="text-2xl font-black text-zinc-900">{torneosFinalizados.length}</p>
+                <p className="text-[11px] font-semibold uppercase text-zinc-500">Historial</p>
+              </div>
+              <div className="ui-card-soft rounded-lg px-3 py-3">
+                <p className="text-2xl font-black text-zinc-900">{torneosConEstado.length}</p>
+                <p className="text-[11px] font-semibold uppercase text-zinc-500">Total</p>
+              </div>
+            </div>
+          </div>
 
-      <TorneosFilters
-        initialValues={{
-          juego,
-          categoria,
-          ciudad,
-        }}
-        juegos={gameOptions}
-      />
+          <div className="mt-6 grid min-w-0 gap-3 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-center">
+            <div className="ui-searchbar">
+              <Search className="size-5 shrink-0 text-[var(--accent)]" />
+              <span className="min-w-0 flex-1 text-sm font-medium sm:text-base">
+                Filtra por juego, formato o ciudad para encontrar el evento correcto.
+              </span>
+              <kbd className="hidden rounded border border-zinc-200 px-2 py-1 text-xs text-zinc-500 sm:inline-flex">/</kbd>
+            </div>
+            <div className="flex min-w-0 flex-wrap gap-2">
+              <span className="ui-chip ui-chip-active">
+                <CalendarDays className="size-4" />
+                Próximos primero
+              </span>
+              <span className="ui-chip">
+                <MapPin className="size-4 text-[var(--accent)]" />
+                {ciudad || "Todas las ciudades"}
+              </span>
+              <span className="ui-chip">{selectedGameLabel}</span>
+            </div>
+          </div>
+        </div>
+      </section>
 
-      {torneosLoadError ? (
-        <section className="rounded-2xl border border-amber-200 bg-amber-50 p-6 text-sm text-amber-800 shadow-sm">
-          No se pudieron cargar los torneos en este momento. Intenta refrescar la pagina.
-        </section>
-      ) : enrichedTorneos.length ? (
-        <section className="grid gap-4 sm:grid-cols-3">
-          {enrichedTorneos.map((torneo) => (
-            <TorneoCard
-              key={torneo.id}
-              torneo={torneo}
-              canInscribirse={userLoggedIn}
-              yaInscripto={torneosInscritos.has(torneo.id)}
-            />
-          ))}
-        </section>
-      ) : (
-        <section className="rounded-2xl border border-dashed border-zinc-300 bg-white p-8 text-center shadow-sm">
-          <h2 className="text-lg font-semibold text-zinc-900">No hay torneos con esos filtros</h2>
-          <p className="mt-2 text-sm text-zinc-600">
-            Ajusta los filtros o vuelve mas tarde para ver nuevas publicaciones.
-          </p>
-        </section>
-      )}
+      <div className="ui-shell flex flex-col gap-5 py-5">
+        {inscripcionCode ? (
+          <NoticeToast
+            message={inscripcionMessages[inscripcionCode] ?? "Estado de inscripcion actualizado."}
+            tone={resolveNoticeTone(inscripcionCode)}
+          />
+        ) : null}
+
+        <TorneosFilters
+          initialValues={{
+            juego,
+            categoria,
+            ciudad,
+          }}
+          juegos={gameOptions}
+        />
+
+        {torneosLoadError ? (
+          <section className="rounded-lg border border-amber-200 bg-amber-50 p-6 text-sm text-amber-800 shadow-sm">
+            No se pudieron cargar los torneos en este momento. Intenta refrescar la pagina.
+          </section>
+        ) : torneosConEstado.length ? (
+          <div className="space-y-8">
+            <section className="space-y-4">
+            <div className="flex flex-wrap items-end justify-between gap-3">
+              <div>
+                <p className="ui-eyebrow">Agenda</p>
+                <h2 className="text-xl font-semibold text-zinc-900">Próximos torneos</h2>
+              </div>
+              <span className="ui-badge ui-badge-accent">{proximosTorneos.length} activos</span>
+            </div>
+
+            {proximosTorneos.length ? (
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                {proximosTorneos.map((torneo) => (
+                  <TorneoCard
+                    key={torneo.id}
+                    torneo={torneo}
+                    canInscribirse={userLoggedIn}
+                    yaInscripto={torneosInscritos.has(torneo.id)}
+                  />
+                ))}
+              </div>
+            ) : (
+              <section className="rounded-lg border border-dashed border-zinc-300 bg-white p-8 text-center shadow-sm">
+                <h3 className="text-lg font-semibold text-zinc-900">No hay torneos próximos con esos filtros</h3>
+                <p className="mt-2 text-sm text-zinc-600">
+                  Puedes revisar el historial o limpiar filtros para ampliar la búsqueda.
+                </p>
+              </section>
+            )}
+            </section>
+
+            {torneosFinalizados.length ? (
+              <section className="space-y-4">
+                <div className="flex flex-wrap items-end justify-between gap-3 border-t border-zinc-200 pt-6">
+                  <div>
+                    <p className="ui-eyebrow">Historial</p>
+                    <h2 className="text-xl font-semibold text-zinc-900">Torneos finalizados</h2>
+                  </div>
+                  <span className="ui-badge">{torneosFinalizados.length} pasados</span>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                  {torneosFinalizados.map((torneo) => (
+                    <TorneoCard
+                      key={torneo.id}
+                      torneo={torneo}
+                      canInscribirse={false}
+                      yaInscripto={torneosInscritos.has(torneo.id)}
+                      isPast
+                    />
+                  ))}
+                </div>
+              </section>
+            ) : null}
+          </div>
+        ) : (
+          <section className="rounded-lg border border-dashed border-zinc-300 bg-white p-8 text-center shadow-sm">
+            <h2 className="text-lg font-semibold text-zinc-900">No hay torneos con esos filtros</h2>
+            <p className="mt-2 text-sm text-zinc-600">
+              Ajusta los filtros o vuelve mas tarde para ver nuevas publicaciones.
+            </p>
+          </section>
+        )}
+      </div>
     </main>
   );
 }

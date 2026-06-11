@@ -79,7 +79,7 @@ export function ImagenUpload({ defaultValue, onUpload }: ImagenUploadProps) {
       <span className="text-sm font-medium text-zinc-700">Imagen del torneo</span>
 
       {preview ? (
-        <div className="relative w-full overflow-hidden rounded-xl border border-zinc-200">
+        <div className="relative w-full overflow-hidden rounded-lg border border-zinc-200">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={preview} alt="Preview" className="h-48 w-full object-cover" />
           <button
@@ -99,7 +99,7 @@ export function ImagenUpload({ defaultValue, onUpload }: ImagenUploadProps) {
         <button
           type="button"
           onClick={() => inputRef.current?.click()}
-          className="flex h-32 w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-zinc-300 text-zinc-500 transition hover:border-zinc-400 hover:bg-zinc-50"
+          className="ui-card-soft flex h-36 w-full flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-zinc-300 text-zinc-500 transition hover:border-[#36d6b7] hover:bg-zinc-50"
         >
           <ImageIcon size={24} />
           <span className="text-sm">Haz clic para subir una imagen</span>

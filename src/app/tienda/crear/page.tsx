@@ -10,10 +10,10 @@ export default async function CrearTiendaPage() {
   await requireAuthenticatedUser("/tienda/crear");
 
   return (
-    <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col px-4 py-10">
-      <header className="mb-6">
-        <p className="text-sm font-medium text-zinc-500">Tienda</p>
-        <h1 className="text-2xl font-bold tracking-tight text-zinc-900">Crear tu tienda</h1>
+    <main className="ui-shell flex flex-1 flex-col py-10">
+      <header className="ui-card mb-6 rounded-lg p-5 sm:p-6">
+        <p className="ui-eyebrow">Tienda</p>
+        <h1 className="text-2xl font-bold tracking-tight text-zinc-900 sm:text-3xl">Crear tu tienda</h1>
         <p className="text-sm text-zinc-600">Crea una tienda para publicar torneos y gestionar tu panel.</p>
       </header>
 

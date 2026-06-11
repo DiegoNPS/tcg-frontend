@@ -25,6 +25,12 @@ type TorneoDefaults = {
   imagen_url?: string | null;
 };
 
+type LookupOption = {
+  id: string;
+  key: string;
+  nombre: string;
+};
+
 type CreateProps = {
   mode?: "create";
   defaults?: never;
@@ -42,17 +48,32 @@ function FieldError({ message }: { message?: string }) {
   return <span className="text-xs text-rose-600">{message}</span>;
 }
 
+function resolveLookupSelection(
+  items: LookupOption[],
+  preferredKey: string | undefined,
+  fallbackKey: string,
+) {
+  return (
+    items.find((item) => item.key === preferredKey) ??
+    items.find((item) => item.key === fallbackKey) ??
+    items[0] ??
+    null
+  );
+}
+
 export function TorneoForm({ mode = "create", defaults }: TorneoFormProps) {
   const router = useRouter();
+  const initialTcgJuego = defaults?.tcg_juego || "pokemon";
+  const initialCategoria = defaults?.categoria || "casual";
   const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [titulo, setTitulo] = useState(defaults?.titulo || "");
   const [descripcion, setDescripcion] = useState(defaults?.descripcion || "");
-  const [tcgJuego, setTcgJuego] = useState(defaults?.tcg_juego || "pokemon");
-  const [categoria, setCategoria] = useState(defaults?.categoria || "casual");
-  const [juegos, setJuegos] = useState<Array<any>>([]);
-  const [categorias, setCategorias] = useState<Array<any>>([]);
+  const [tcgJuego, setTcgJuego] = useState(initialTcgJuego);
+  const [categoria, setCategoria] = useState(initialCategoria);
+  const [juegos, setJuegos] = useState<LookupOption[]>([]);
+  const [categorias, setCategorias] = useState<LookupOption[]>([]);
   const [juegoId, setJuegoId] = useState<string | null>(null);
   const [categoriaId, setCategoriaId] = useState<string | null>(null);
   const [direccion, setDireccion] = useState(defaults?.direccion || "");
@@ -72,34 +93,57 @@ export function TorneoForm({ mode = "create", defaults }: TorneoFormProps) {
   };
 
   useEffect(() => {
-    // fetch lookups
-    fetch("/api/lookups/juegos").then((r) => r.json()).then((j) => setJuegos(j.data ?? [])).catch(() => {});
-    fetch("/api/lookups/categorias").then((r) => r.json()).then((c) => setCategorias(c.data ?? [])).catch(() => {});
-  }, []);
+    let cancelled = false;
 
-  useEffect(() => {
-    if (!defaults?.tcg_juego || juegoId || !juegos.length) return;
-    const match = juegos.find((juego) => juego.key === defaults.tcg_juego);
-    if (match) {
-      setJuegoId(match.id);
-      setTcgJuego(match.key as TcgJuego);
+    async function loadLookups() {
+      try {
+        const [juegosResponse, categoriasResponse] = await Promise.all([
+          fetch("/api/lookups/juegos"),
+          fetch("/api/lookups/categorias"),
+        ]);
+        const [juegosJson, categoriasJson] = await Promise.all([
+          juegosResponse.ok ? juegosResponse.json() : Promise.resolve({ data: [] }),
+          categoriasResponse.ok ? categoriasResponse.json() : Promise.resolve({ data: [] }),
+        ]);
+
+        if (cancelled) return;
+
+        const nextJuegos = (juegosJson.data ?? []) as LookupOption[];
+        const nextCategorias = (categoriasJson.data ?? []) as LookupOption[];
+        const selectedJuego = resolveLookupSelection(nextJuegos, initialTcgJuego, "pokemon");
+        const selectedCategoria = resolveLookupSelection(nextCategorias, initialCategoria, "casual");
+
+        setJuegos(nextJuegos);
+        setCategorias(nextCategorias);
+
+        if (selectedJuego) {
+          setJuegoId(selectedJuego.id);
+          setTcgJuego(selectedJuego.key as TcgJuego);
+        }
+
+        if (selectedCategoria) {
+          setCategoriaId(selectedCategoria.id);
+          setCategoria(selectedCategoria.key as CategoriaTorneo);
+        }
+      } catch {
+        if (!cancelled) {
+          setJuegos([]);
+          setCategorias([]);
+        }
+      }
     }
-  }, [defaults?.tcg_juego, juegoId, juegos]);
 
-  useEffect(() => {
-    if (!defaults?.categoria || categoriaId || !categorias.length) return;
-    const match = categorias.find((categoriaItem) => categoriaItem.key === defaults.categoria);
-    if (match) {
-      setCategoriaId(match.id);
-      setCategoria(match.key as CategoriaTorneo);
-    }
-  }, [categoriaId, categorias, defaults?.categoria]);
+    loadLookups();
 
-  const handleSubmit = async (
-    event: React.FormEvent,
-    publicar: boolean,
-  ) => {
+    return () => {
+      cancelled = true;
+    };
+  }, [initialCategoria, initialTcgJuego]);
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    const submitter = (event.nativeEvent as SubmitEvent).submitter as HTMLButtonElement | null;
+    const publicar = submitter?.value !== "false";
     setError(null);
     setFieldErrors({});
     setIsPending(true);
@@ -145,7 +189,7 @@ export function TorneoForm({ mode = "create", defaults }: TorneoFormProps) {
         return;
       }
 
-      router.push("/tienda/dashboard?created=1");
+      router.push(mode === "edit" ? "/tienda/dashboard?updated=1" : "/tienda/dashboard?created=1");
     } catch {
       setError("Error de conexión. Intenta nuevamente.");
       setIsPending(false);
@@ -153,9 +197,9 @@ export function TorneoForm({ mode = "create", defaults }: TorneoFormProps) {
   };
 
   return (
-    <form className="space-y-6 rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
+    <form onSubmit={handleSubmit} className="ui-card space-y-6 rounded-lg p-5 sm:p-6">
       {error ? (
-        <p className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
+        <p className="ui-alert ui-alert-danger">
           {error}
         </p>
       ) : null}
@@ -168,7 +212,7 @@ export function TorneoForm({ mode = "create", defaults }: TorneoFormProps) {
             value={titulo}
             onChange={(e) => setTitulo(e.target.value)}
             placeholder="Liga de Sabado"
-            className="rounded-xl border border-zinc-300 px-3 py-2.5 outline-none transition focus:border-zinc-900 aria-[invalid]:border-rose-400"
+            className="ui-field aria-[invalid]:border-rose-400"
             aria-invalid={!!fieldErrors.titulo || undefined}
           />
           <FieldError message={fieldErrors.titulo} />
@@ -181,7 +225,7 @@ export function TorneoForm({ mode = "create", defaults }: TorneoFormProps) {
             type="datetime-local"
             value={fechaInicio}
             onChange={(e) => setFechaInicio(e.target.value)}
-            className="rounded-xl border border-zinc-300 px-3 py-2.5 outline-none transition focus:border-zinc-900 aria-[invalid]:border-rose-400"
+            className="ui-field aria-[invalid]:border-rose-400"
             aria-invalid={!!fieldErrors.fecha_inicio || undefined}
           />
           <FieldError message={fieldErrors.fecha_inicio} />
@@ -196,7 +240,7 @@ export function TorneoForm({ mode = "create", defaults }: TorneoFormProps) {
           value={descripcion}
           onChange={(e) => setDescripcion(e.target.value)}
           placeholder="Detalles del torneo, premios y formato."
-          className="rounded-xl border border-zinc-300 px-3 py-2.5 outline-none transition focus:border-zinc-900 aria-[invalid]:border-rose-400"
+          className="ui-field min-h-28 aria-[invalid]:border-rose-400"
           aria-invalid={!!fieldErrors.descripcion || undefined}
         />
         <FieldError message={fieldErrors.descripcion} />
@@ -213,13 +257,13 @@ export function TorneoForm({ mode = "create", defaults }: TorneoFormProps) {
               const found = juegos.find((j: any) => j.id === val);
               if (found) {
                 setJuegoId(found.id);
-                setTcgJuego(found.key);
+                setTcgJuego(found.key as TcgJuego);
               } else {
                 setJuegoId(null);
                 setTcgJuego(val as TcgJuego);
               }
             }}
-            className="rounded-xl border border-zinc-300 px-3 py-2.5 outline-none transition focus:border-zinc-900"
+            className="ui-field"
           >
             {juegos.length > 0 ? (
               <>
@@ -240,7 +284,7 @@ export function TorneoForm({ mode = "create", defaults }: TorneoFormProps) {
               ))
             )}
           </select>
-          <FieldError message={fieldErrors.tcg_juego} />
+          <FieldError message={fieldErrors.juego_id ?? fieldErrors.tcg_juego} />
         </label>
 
         <label className="flex flex-col gap-1 text-sm">
@@ -253,13 +297,13 @@ export function TorneoForm({ mode = "create", defaults }: TorneoFormProps) {
               const found = categorias.find((c: any) => c.id === val);
               if (found) {
                 setCategoriaId(found.id);
-                setCategoria(found.key);
+                setCategoria(found.key as CategoriaTorneo);
               } else {
                 setCategoriaId(null);
                 setCategoria(val as CategoriaTorneo);
               }
             }}
-            className="rounded-xl border border-zinc-300 px-3 py-2.5 outline-none transition focus:border-zinc-900"
+            className="ui-field"
           >
             {categorias.length > 0 ? (
               <>
@@ -280,7 +324,7 @@ export function TorneoForm({ mode = "create", defaults }: TorneoFormProps) {
               ))
             )}
           </select>
-          <FieldError message={fieldErrors.categoria} />
+          <FieldError message={fieldErrors.categoria_id ?? fieldErrors.categoria} />
         </label>
       </div>
 
@@ -306,7 +350,7 @@ export function TorneoForm({ mode = "create", defaults }: TorneoFormProps) {
             max={1024}
             value={cupoMaximo}
             onChange={(e) => setCupoMaximo(Number(e.target.value))}
-            className="rounded-xl border border-zinc-300 px-3 py-2.5 outline-none transition focus:border-zinc-900 aria-[invalid]:border-rose-400"
+            className="ui-field aria-[invalid]:border-rose-400"
             aria-invalid={!!fieldErrors.cupo_maximo || undefined}
           />
           <FieldError message={fieldErrors.cupo_maximo} />
@@ -321,7 +365,7 @@ export function TorneoForm({ mode = "create", defaults }: TorneoFormProps) {
             step="0.01"
             value={costoEntrada}
             onChange={(e) => setCostoEntrada(Number(e.target.value))}
-            className="rounded-xl border border-zinc-300 px-3 py-2.5 outline-none transition focus:border-zinc-900 aria-[invalid]:border-rose-400"
+            className="ui-field aria-[invalid]:border-rose-400"
             aria-invalid={!!fieldErrors.costo_entrada || undefined}
           />
           <FieldError message={fieldErrors.costo_entrada} />
@@ -332,18 +376,20 @@ export function TorneoForm({ mode = "create", defaults }: TorneoFormProps) {
 
       <div className="flex flex-wrap items-center gap-3 pt-2">
         <button
-          type="button"
-          onClick={(e) => handleSubmit(e, true)}
+          type="submit"
+          name="publicado"
+          value="true"
           disabled={isPending}
-          className="inline-flex items-center justify-center rounded-xl bg-zinc-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-zinc-700 disabled:opacity-60"
+          className="ui-button-primary"
         >
           {isPending ? "Guardando…" : mode === "edit" ? "Guardar cambios" : "Publicar torneo"}
         </button>
         <button
-          type="button"
-          onClick={(e) => handleSubmit(e, false)}
+          type="submit"
+          name="publicado"
+          value="false"
           disabled={isPending}
-          className="inline-flex items-center justify-center rounded-xl border border-zinc-300 bg-white px-4 py-2.5 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-50 disabled:opacity-60"
+          className="ui-button-ghost"
         >
           {isPending ? "Guardando…" : "Guardar borrador"}
         </button>

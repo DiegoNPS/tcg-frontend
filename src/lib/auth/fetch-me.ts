@@ -1,4 +1,6 @@
-import { cookies, headers } from "next/headers";
+import { cookies } from "next/headers";
+
+import { resolveServerApiBaseUrl } from "@/lib/api/base-url";
 
 export type MeProfile = {
   display_name: string | null;
@@ -12,19 +14,8 @@ export type MePayload = {
   isTienda: boolean;
 };
 
-async function resolveBaseUrl(): Promise<string | null> {
-  const envBase = process.env.NEXT_PUBLIC_APP_URL?.trim();
-  if (envBase) return envBase.replace(/\/$/, "");
-
-  const h = await headers();
-  const host = h.get("host");
-  if (!host) return null;
-  const proto = h.get("x-forwarded-proto") ?? "http";
-  return `${proto}://${host}`;
-}
-
 export async function fetchMe(): Promise<MePayload | null> {
-  const baseUrl = await resolveBaseUrl();
+  const baseUrl = await resolveServerApiBaseUrl();
   if (!baseUrl) return null;
 
   const cookieStore = await cookies();

@@ -1,7 +1,8 @@
 import { notFound, redirect } from "next/navigation";
-import { cookies, headers } from "next/headers";
+import { cookies } from "next/headers";
 
 import { TorneoForm } from "@/components/forms/torneo-form";
+import { resolveServerApiBaseUrl } from "@/lib/api/base-url";
 import { LOGIN_PATH } from "@/lib/auth/routes";
 import type { CategoriaTorneo, TcgJuego } from "@/types/database.types";
 
@@ -25,21 +26,10 @@ type TorneoEditPayload = {
   categoria: string | null;
 };
 
-async function resolveBaseUrl(): Promise<string | null> {
-  const envBase = process.env.NEXT_PUBLIC_APP_URL?.trim();
-  if (envBase) return envBase.replace(/\/$/, "");
-
-  const h = await headers();
-  const host = h.get("host");
-  if (!host) return null;
-  const proto = h.get("x-forwarded-proto") ?? "http";
-  return `${proto}://${host}`;
-}
-
 export default async function EditarTorneoPage({ params }: EditarTorneoPageProps) {
   const { id } = await params;
 
-  const baseUrl = await resolveBaseUrl();
+  const baseUrl = await resolveServerApiBaseUrl();
   if (!baseUrl) notFound();
 
   const cookieStore = await cookies();

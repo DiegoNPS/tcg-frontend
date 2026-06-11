@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { cookies, headers } from "next/headers";
+import { cookies } from "next/headers";
 
 import { AdminGameForm } from "@/components/forms/admin-game-form";
+import { resolveServerApiBaseUrl } from "@/lib/api/base-url";
 import { requireAdmin } from "@/lib/auth/guards";
 
 type StatCardProps = {
@@ -48,7 +49,7 @@ type DashboardPayload = {
 
 function StatCard({ label, value, description }: StatCardProps) {
   return (
-    <article className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
+    <article className="ui-card rounded-lg p-5">
       <p className="text-sm font-medium text-zinc-500">{label}</p>
       <p className="mt-2 text-3xl font-semibold tracking-tight text-zinc-900">{value}</p>
       <p className="mt-1 text-sm text-zinc-600">{description}</p>
@@ -56,21 +57,10 @@ function StatCard({ label, value, description }: StatCardProps) {
   );
 }
 
-async function resolveBaseUrl(): Promise<string | null> {
-  const envBase = process.env.NEXT_PUBLIC_APP_URL?.trim();
-  if (envBase) return envBase.replace(/\/$/, "");
-
-  const h = await headers();
-  const host = h.get("host");
-  if (!host) return null;
-  const proto = h.get("x-forwarded-proto") ?? "http";
-  return `${proto}://${host}`;
-}
-
 export default async function AdminPage() {
   await requireAdmin();
 
-  const baseUrl = await resolveBaseUrl();
+  const baseUrl = await resolveServerApiBaseUrl();
   const cookieStore = await cookies();
   const cookieHeader = cookieStore.toString();
 
@@ -107,9 +97,9 @@ export default async function AdminPage() {
 
   if (missingServiceRole) {
     return (
-      <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-4 py-10">
+      <main className="ui-shell flex flex-1 flex-col py-10">
         <h1 className="text-2xl font-bold tracking-tight text-zinc-900">Panel de administración</h1>
-        <p className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+        <p className="ui-alert ui-alert-warning mt-3">
           Configura `SUPABASE_SERVICE_ROLE` para cargar métricas y usuarios del sistema.
         </p>
       </main>
@@ -118,9 +108,9 @@ export default async function AdminPage() {
 
   if (loadError || !payload) {
     return (
-      <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-4 py-10">
+      <main className="ui-shell flex flex-1 flex-col py-10">
         <h1 className="text-2xl font-bold tracking-tight text-zinc-900">Panel de administración</h1>
-        <p className="mt-3 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+        <p className="ui-alert ui-alert-danger mt-3">
           No se pudo cargar el panel de administración. Intenta refrescar.
         </p>
       </main>
@@ -130,21 +120,20 @@ export default async function AdminPage() {
   const { counts, juegos, recentUsers, recentTorneos, recentStores } = payload;
 
   return (
-    <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8 px-4 py-10">
-      <header className="flex flex-wrap items-end justify-between gap-4">
+    <main className="ui-shell flex flex-1 flex-col gap-8 py-10">
+      <header className="ui-card rounded-lg p-5 sm:p-6">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-wide text-zinc-500">Administración</p>
+          <p className="ui-eyebrow">Administración</p>
           <h1 className="text-3xl font-bold tracking-tight text-zinc-900">Panel de control</h1>
           <p className="mt-2 max-w-2xl text-sm text-zinc-600">
             Supervisa usuarios, tiendas, torneos e inscripciones. Este panel consume la API admin del backend.
           </p>
         </div>
-        <Link
-          href="/admin"
-          className="rounded-xl bg-zinc-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-zinc-700"
-        >
-          Refrescar panel
-        </Link>
+        <div className="mt-5">
+          <Link href="/admin" className="ui-button-primary">
+            Refrescar panel
+          </Link>
+        </div>
       </header>
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
@@ -156,13 +145,13 @@ export default async function AdminPage() {
       </section>
 
       <section className="grid gap-6 lg:grid-cols-2">
-        <article className="rounded-2xl border border-zinc-200 bg-white shadow-sm">
+        <article className="ui-card overflow-hidden rounded-lg">
           <div className="border-b border-zinc-200 px-4 py-3">
             <h2 className="text-sm font-semibold text-zinc-900">Catálogo de juegos</h2>
           </div>
           <div className="space-y-4 px-4 py-4">
             <AdminGameForm actionLabel="Crear juego" />
-            <div className="divide-y divide-zinc-100 rounded-2xl border border-zinc-200">
+            <div className="divide-y divide-zinc-100 overflow-hidden rounded-lg border border-zinc-200">
               {juegos.length ? (
                 juegos.map((juego) => (
                   <div key={juego.id} className="px-4 py-3 text-sm">
@@ -177,7 +166,7 @@ export default async function AdminPage() {
           </div>
         </article>
 
-        <article className="rounded-2xl border border-zinc-200 bg-white shadow-sm">
+        <article className="ui-card overflow-hidden rounded-lg">
           <div className="border-b border-zinc-200 px-4 py-3">
             <h2 className="text-sm font-semibold text-zinc-900">Usuarios recientes</h2>
           </div>
@@ -186,7 +175,7 @@ export default async function AdminPage() {
               recentUsers.map((user) => (
                 <div key={user.id} className="flex items-center justify-between px-4 py-3 text-sm">
                   <div>
-                    <p className="font-medium text-zinc-900">{user.email ?? "Sin email"}</p>
+                    <p className="font-medium text-zinc-900">{user.email ?? "Sin correo"}</p>
                     <p className="text-zinc-600">{user.created_at ? new Date(user.created_at).toLocaleString("es-ES") : "Sin fecha"}</p>
                   </div>
                   <span className="rounded-full border border-zinc-200 px-2.5 py-1 text-xs font-medium text-zinc-600">
@@ -202,7 +191,7 @@ export default async function AdminPage() {
       </section>
 
       <section className="grid gap-6 lg:grid-cols-2">
-        <article className="rounded-2xl border border-zinc-200 bg-white shadow-sm">
+        <article className="ui-card overflow-hidden rounded-lg">
           <div className="border-b border-zinc-200 px-4 py-3">
             <h2 className="text-sm font-semibold text-zinc-900">Torneos recientes</h2>
           </div>
@@ -228,7 +217,7 @@ export default async function AdminPage() {
           </div>
         </article>
 
-        <article className="rounded-2xl border border-zinc-200 bg-white shadow-sm">
+        <article className="ui-card overflow-hidden rounded-lg">
           <div className="border-b border-zinc-200 px-4 py-3">
             <h2 className="text-sm font-semibold text-zinc-900">Tiendas recientes</h2>
           </div>
@@ -247,7 +236,7 @@ export default async function AdminPage() {
         </article>
       </section>
 
-      <section className="rounded-2xl border border-zinc-200 bg-white shadow-sm">
+      <section className="ui-card overflow-hidden rounded-lg">
         <div className="border-b border-zinc-200 px-4 py-3">
           <h2 className="text-sm font-semibold text-zinc-900">Acciones recomendadas</h2>
         </div>

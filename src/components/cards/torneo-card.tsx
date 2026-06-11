@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarClock, MapPin, Store, Ticket } from "lucide-react";
+import { CalendarClock, ExternalLink, MapPin, Store, Ticket, Users } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -26,20 +26,25 @@ type TorneoCardProps = {
   torneo: TorneoCardModel;
   canInscribirse: boolean;
   yaInscripto: boolean;
+  isPast?: boolean;
 };
 
-const dateFormatter = new Intl.DateTimeFormat("es-ES", {
-  dateStyle: "full",
-  timeStyle: "short",
+const dateFormatter = new Intl.DateTimeFormat("es-CL", {
+  day: "2-digit",
+  month: "short",
+  year: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
 });
 
-export function TorneoCard({ torneo, canInscribirse, yaInscripto }: TorneoCardProps) {
+export function TorneoCard({ torneo, canInscribirse, yaInscripto, isPast = false }: TorneoCardProps) {
   const router = useRouter();
   const [isPending, setIsPending] = useState(false);
   const fecha = new Date(torneo.fecha_inicio);
+  const canRegister = canInscribirse && !yaInscripto && !isPast;
 
   const handleInscribirse = async () => {
-    if (!canInscribirse || yaInscripto) return;
+    if (!canRegister) return;
 
     setIsPending(true);
     try {
@@ -85,10 +90,6 @@ export function TorneoCard({ torneo, canInscribirse, yaInscripto }: TorneoCardPr
   const latitud = torneo.latitud ?? null;
   const longitud = torneo.longitud ?? null;
   const hasCoordinates = typeof latitud === "number" && typeof longitud === "number";
-  const mapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
-  const mapsEmbedUrl = hasCoordinates && mapsApiKey
-    ? `https://www.google.com/maps/embed/v1/view?key=${mapsApiKey}&center=${latitud},${longitud}&zoom=15&maptype=roadmap`
-    : "";
   const mapsLink = hasCoordinates
     ? `https://www.google.com/maps?q=${latitud},${longitud}`
     : "";
@@ -98,94 +99,100 @@ export function TorneoCard({ torneo, canInscribirse, yaInscripto }: TorneoCardPr
 
   return (
     <article
-      className="relative space-y-3 overflow-hidden rounded-2xl border border-zinc-200 shadow-sm"
-      style={{
-        backgroundImage,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-      }}
+      className={`ui-event-card flex min-h-[28rem] flex-col ${isPast ? "opacity-75 grayscale-[0.15]" : ""}`}
     >
-      <div className="relative space-y-3 p-4 text-white">
-        <header className="space-y-1.5">
-          <div className="flex flex-wrap items-center gap-2 text-[11px] font-medium uppercase tracking-wide text-white/80">
-            <span className="rounded-full bg-white/15 px-2 py-0.5">{torneo.tcg_juego}</span>
-            <span className="rounded-full bg-white/15 px-2 py-0.5">{torneo.categoria}</span>
-          </div>
-          <h2 className="text-base font-semibold text-white">{torneo.titulo}</h2>
-          <p className="text-xs text-white/80">{torneo.descripcion}</p>
+      <div
+        className="relative h-40 border-b border-zinc-200 bg-zinc-900"
+        style={{
+          backgroundImage,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+      >
+        <div className="absolute inset-0 bg-gradient-to-t from-[#111820]/42 to-transparent" />
+        <div className="absolute bottom-3 left-3 right-3 flex flex-wrap items-center gap-2">
+          <span className="ui-badge ui-badge-accent bg-[rgba(8,12,18,0.78)]">{torneo.tcg_juego}</span>
+          <span className="ui-badge ui-badge-warning bg-[rgba(8,12,18,0.78)]">{torneo.categoria}</span>
+          {isPast ? <span className="ui-badge bg-[rgba(8,12,18,0.78)]">Finalizado</span> : null}
+        </div>
+      </div>
+
+      <div className="flex flex-1 flex-col gap-4 p-4">
+        <header className="space-y-2">
+          <h2 className="text-clamp-2 min-h-[3.1rem] text-xl font-black leading-tight text-zinc-900">{torneo.titulo}</h2>
+          <p className="text-clamp-2 min-h-[2.5rem] text-sm leading-5 text-zinc-600">{torneo.descripcion}</p>
         </header>
 
-        <dl className="space-y-1.5 text-xs text-white/85">
-          <div className="flex items-start gap-2">
-            <CalendarClock className="mt-0.5 size-4 text-white/70" />
-            <div>
-              <dt className="font-medium text-white/90">Fecha</dt>
-              <dd>{Number.isFinite(fecha.getTime()) ? dateFormatter.format(fecha) : "Por definir"}</dd>
-            </div>
+        <dl className="grid gap-2 text-sm text-zinc-600">
+          <div className="flex items-center gap-2">
+            <CalendarClock className="size-4 shrink-0 text-white" />
+            <dt className="sr-only">Fecha</dt>
+            <dd>{Number.isFinite(fecha.getTime()) ? dateFormatter.format(fecha) : "Por definir"}</dd>
           </div>
           <div className="flex items-start gap-2">
-            <MapPin className="mt-0.5 size-4 text-white/70" />
-            <div>
-              <dt className="font-medium text-white/90">Ubicacion</dt>
-              <dd>{`${torneo.ciudad} - ${torneo.direccion}`}</dd>
-            </div>
+            <MapPin className="mt-0.5 size-4 shrink-0 text-white" />
+            <dt className="sr-only">Ubicación</dt>
+            <dd className="text-clamp-2">{torneo.ciudad ? `${torneo.ciudad} - ${torneo.direccion}` : torneo.direccion}</dd>
           </div>
-          <div className="flex items-start gap-2">
-            <Store className="mt-0.5 size-4 text-white/70" />
-            <div>
-              <dt className="font-medium text-white/90">Tienda organizadora</dt>
-              <dd>{torneo.tiendaNombre}</dd>
-            </div>
+          <div className="flex items-center gap-2">
+            <Store className="size-4 shrink-0 text-white" />
+            <dt className="sr-only">Tienda organizadora</dt>
+            <dd className="truncate">{torneo.tiendaNombre}</dd>
           </div>
-          <div className="flex items-start gap-2">
-            <Ticket className="mt-0.5 size-4 text-white/70" />
-            <div>
-              <dt className="font-medium text-white/90">Entrada</dt>
-              <dd>{torneo.costo_entrada === 0 ? "Gratis" : `$${torneo.costo_entrada.toLocaleString("es-CL")}`}</dd>
+          <div className="grid grid-cols-2 gap-2 pt-1">
+            <div className="ui-card-soft rounded-lg px-3 py-2">
+              <dt className="flex items-center gap-1 text-xs font-semibold uppercase text-zinc-500">
+                <Ticket className="size-3.5" />
+                Entrada
+              </dt>
+              <dd className="mt-1 font-bold text-zinc-900">
+                {torneo.costo_entrada === 0 ? "Gratis" : `$${torneo.costo_entrada.toLocaleString("es-CL")}`}
+              </dd>
+            </div>
+            <div className="ui-card-soft rounded-lg px-3 py-2">
+              <dt className="flex items-center gap-1 text-xs font-semibold uppercase text-zinc-500">
+                <Users className="size-3.5" />
+                Cupos
+              </dt>
+              <dd className="mt-1 font-bold text-zinc-900">{torneo.cupo_maximo.toLocaleString("es-CL")}</dd>
             </div>
           </div>
         </dl>
 
-        {mapsEmbedUrl ? (
-          <iframe
-            title={`Mapa ${torneo.titulo}`}
-            className="h-32 w-full rounded-xl border border-white/20"
-            loading="lazy"
-            referrerPolicy="no-referrer-when-downgrade"
-            src={mapsEmbedUrl}
-          />
-        ) : null}
+        <div className="mt-auto space-y-3">
+          <div className="flex min-h-5 flex-wrap items-center gap-3">
+            {mapsLink ? (
+              <a
+                className="inline-flex items-center gap-1 text-xs font-semibold text-[var(--accent)] underline-offset-4 hover:underline"
+                href={mapsLink}
+                rel="noreferrer"
+                target="_blank"
+              >
+                Ver mapa
+                <ExternalLink className="size-3.5" />
+              </a>
+            ) : null}
 
-        {!mapsEmbedUrl && mapsLink ? (
-          <a
-            className="block w-fit text-xs font-medium text-white underline underline-offset-4"
-            href={mapsLink}
-            rel="noreferrer"
-            target="_blank"
-          >
-            Ver en Google Maps
-          </a>
-        ) : null}
+            {yaInscripto ? <p className="text-xs font-semibold text-emerald-300">Ya estás inscrito.</p> : null}
+            {isPast ? <p className="text-xs font-semibold text-zinc-500">Inscripciones cerradas.</p> : null}
+          </div>
 
-        {yaInscripto ? (
-          <p className="text-xs font-medium text-emerald-200">Ya estas inscrito en este torneo.</p>
-        ) : null}
+          {canRegister ? (
+            <button
+              onClick={handleInscribirse}
+              disabled={isPending}
+              className="ui-button-primary w-full"
+            >
+              {isPending ? "Inscribiendo..." : "Inscribirme"}
+            </button>
+          ) : null}
 
-        {canInscribirse && !yaInscripto ? (
-          <button
-            onClick={handleInscribirse}
-            disabled={isPending}
-            className="inline-flex items-center justify-center rounded-xl bg-white px-3 py-2 text-xs font-semibold text-zinc-900 transition hover:bg-white/90 disabled:opacity-60"
-          >
-            {isPending ? "Inscribiendo..." : "Inscribirme"}
-          </button>
-        ) : null}
-
-        {!canInscribirse ? (
-          <Link href={loginHref} className="block w-fit text-xs font-medium text-white underline underline-offset-4">
-            Inicia sesion para inscribirte
-          </Link>
-        ) : null}
+          {!canInscribirse && !isPast ? (
+            <Link href={loginHref} className="ui-button-ghost w-full">
+              Inicia sesión para inscribirte
+            </Link>
+          ) : null}
+        </div>
       </div>
     </article>
   );

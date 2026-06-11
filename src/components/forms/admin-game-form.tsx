@@ -61,7 +61,7 @@ export function AdminGameForm({ actionLabel = "Guardar juego" }: AdminGameFormPr
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
+    <form onSubmit={handleSubmit} className="ui-card-soft space-y-4 rounded-lg p-4">
       <div className="grid gap-4 md:grid-cols-2">
         <label className="flex flex-col gap-1 text-sm md:col-span-2">
           <span className="font-medium text-zinc-700">Nombre del juego</span>
@@ -75,8 +75,8 @@ export function AdminGameForm({ actionLabel = "Guardar juego" }: AdminGameFormPr
                 setKey(toSlug(nextNombre));
               }
             }}
-            placeholder="Pokemon TCG"
-            className="rounded-xl border border-zinc-300 px-3 py-2.5 outline-none transition focus:border-zinc-900"
+            placeholder="Pokémon TCG"
+            className="ui-field"
           />
         </label>
 
@@ -86,7 +86,7 @@ export function AdminGameForm({ actionLabel = "Guardar juego" }: AdminGameFormPr
             value={key}
             onChange={(event) => setKey(event.target.value)}
             placeholder="pokemon_tcg"
-            className="rounded-xl border border-zinc-300 px-3 py-2.5 outline-none transition focus:border-zinc-900"
+            className="ui-field"
           />
         </label>
 
@@ -96,7 +96,7 @@ export function AdminGameForm({ actionLabel = "Guardar juego" }: AdminGameFormPr
             value={descripcion}
             onChange={(event) => setDescripcion(event.target.value)}
             placeholder="Juego de cartas coleccionables"
-            className="rounded-xl border border-zinc-300 px-3 py-2.5 outline-none transition focus:border-zinc-900"
+            className="ui-field"
           />
         </label>
       </div>
@@ -104,12 +104,12 @@ export function AdminGameForm({ actionLabel = "Guardar juego" }: AdminGameFormPr
       <button
         type="submit"
         disabled={isPending}
-        className="inline-flex items-center justify-center rounded-xl bg-zinc-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-70"
+        className="ui-button-primary"
       >
         {isPending ? "Guardando..." : actionLabel}
       </button>
 
-      {message ? <p className="text-sm text-zinc-600">{message}</p> : null}
+      {message ? <p className="ui-alert">{message}</p> : null}
     </form>
   );
 }

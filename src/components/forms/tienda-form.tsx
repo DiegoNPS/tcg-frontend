@@ -21,8 +21,8 @@ export function TiendaForm() {
     setIsPending(true);
 
     const formData = new FormData(event.currentTarget);
-    const nombre = formData.get("nombre") as string;
-    const ciudad = formData.get("ciudad") as string;
+    const nombre = String(formData.get("nombre") ?? "").trim();
+    const ciudad = String(formData.get("ciudad") ?? "").trim();
 
     try {
       const response = await fetch("/api/tiendas", {
@@ -42,7 +42,7 @@ export function TiendaForm() {
         return;
       }
 
-      router.push("/tienda/dashboard?created=1");
+      router.push("/tienda/dashboard?store=created");
     } catch {
       setError("Error de conexión. Intenta nuevamente.");
       setIsPending(false);
@@ -50,20 +50,20 @@ export function TiendaForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm max-w-xl">
+    <form onSubmit={handleSubmit} className="ui-card max-w-xl space-y-4 rounded-lg p-5 sm:p-6">
       {error ? (
-        <p className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p>
+        <p className="ui-alert ui-alert-danger">{error}</p>
       ) : null}
 
       <label className="flex flex-col gap-1 text-sm">
         <span className="font-medium text-zinc-700">Nombre de la tienda</span>
-        <input required name="nombre" placeholder="Mi tienda" className="rounded-xl border border-zinc-300 px-3 py-2.5 outline-none" />
+        <input required name="nombre" placeholder="Mi tienda" className="ui-field" />
         <FieldError message={fieldErrors?.nombre} />
       </label>
 
       <label className="flex flex-col gap-1 text-sm">
         <span className="font-medium text-zinc-700">Ciudad</span>
-        <input required name="ciudad" placeholder="Ciudad" className="rounded-xl border border-zinc-300 px-3 py-2.5 outline-none" />
+        <input required name="ciudad" placeholder="Ciudad" className="ui-field" />
         <FieldError message={fieldErrors?.ciudad} />
       </label>
 
@@ -71,7 +71,7 @@ export function TiendaForm() {
         <button
           type="submit"
           disabled={isPending}
-          className="inline-flex items-center justify-center rounded-xl bg-zinc-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-zinc-700 disabled:opacity-60"
+          className="ui-button-primary"
         >
           {isPending ? "Creando…" : "Crear tienda"}
         </button>

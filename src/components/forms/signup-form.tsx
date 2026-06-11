@@ -36,7 +36,7 @@ export function SignupForm({ nextPath }: SignupFormProps) {
   const [country, setCountry] = useState("Chile");
   const [latitude, setLatitude] = useState<number | null>(null);
   const [longitude, setLongitude] = useState<number | null>(null);
-  const [acceptTerms, setAcceptTerms] = useState(true);
+  const [acceptTerms, setAcceptTerms] = useState(false);
   const [receiveNews, setReceiveNews] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
@@ -49,29 +49,27 @@ export function SignupForm({ nextPath }: SignupFormProps) {
     return callbackUrl.toString();
   };
 
-  const handleGoogleSignup = () => {
+  const handleGoogleSignup = async () => {
     setMessage(null);
+    setIsPending(true);
 
     try {
       const supabase = createClient();
 
-      supabase.auth
-        .signInWithOAuth({
-          provider: "google",
-          options: {
-            redirectTo: buildCallbackUrl(),
-          },
-        })
-        .then(({ error }) => {
-          if (error) {
-            setMessage("No se pudo continuar con Google. Intenta nuevamente.");
-          }
-        })
-        .catch(() => {
-          setMessage("Faltan variables de entorno de Supabase. Configura .env.local y vuelve a intentar.");
-        });
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: buildCallbackUrl(),
+        },
+      });
+
+      if (error) {
+        setMessage("No se pudo continuar con Google. Intenta nuevamente.");
+        setIsPending(false);
+      }
     } catch {
       setMessage("Faltan variables de entorno de Supabase. Configura .env.local y vuelve a intentar.");
+      setIsPending(false);
     }
   };
 
@@ -132,7 +130,7 @@ export function SignupForm({ nextPath }: SignupFormProps) {
         body: JSON.stringify({
           displayName: displayName.trim(),
           email: email.trim(),
-          password: password.trim(),
+          password,
           address: address.trim(),
           city: city.trim(),
           stateRegion: stateRegion.trim(),
@@ -174,6 +172,7 @@ export function SignupForm({ nextPath }: SignupFormProps) {
       setCountry("Chile");
       setLatitude(null);
       setLongitude(null);
+      setAcceptTerms(false);
       setReceiveNews(false);
     } catch {
       setMessage("Error de conexión. Intenta nuevamente.");
@@ -183,12 +182,12 @@ export function SignupForm({ nextPath }: SignupFormProps) {
   };
 
   return (
-    <div className="space-y-5 rounded-[1.75rem] border border-zinc-200/80 bg-white p-5 shadow-[0_18px_50px_rgba(24,24,27,0.12)] sm:p-6">
+    <div className="ui-card space-y-5 rounded-lg p-5 sm:p-6">
       <button
         type="button"
         onClick={handleGoogleSignup}
         disabled={isPending}
-        className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-zinc-300 bg-white px-4 py-3 text-sm font-semibold text-zinc-800 transition hover:border-zinc-400 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-70"
+        className="ui-button-secondary w-full"
       >
         <ShieldCheck className="size-4" />
         {isPending ? "Conectando..." : "Registrarse con Google"}
@@ -343,7 +342,7 @@ export function SignupForm({ nextPath }: SignupFormProps) {
           </section>
         </div>
 
-        <div className="space-y-3 rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-4">
+        <div className="ui-card-soft space-y-3 rounded-lg px-4 py-4">
           <label className="flex items-start gap-3 text-sm text-zinc-700">
             <input
               type="checkbox"
@@ -370,14 +369,14 @@ export function SignupForm({ nextPath }: SignupFormProps) {
         <button
           type="submit"
           disabled={isPending}
-          className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-zinc-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-zinc-700 disabled:cursor-not-allowed disabled:bg-zinc-500"
+          className="ui-button-primary w-full"
         >
           <Send className="size-4" />
           {isPending ? "Creando cuenta..." : "Crear cuenta"}
         </button>
       </form>
 
-      {message ? <p className="rounded-2xl bg-zinc-50 px-4 py-3 text-sm text-zinc-700">{message}</p> : null}
+      {message ? <p className="ui-alert ui-alert-warning">{message}</p> : null}
     </div>
   );
 }

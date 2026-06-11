@@ -25,29 +25,27 @@ export function LoginForm({ nextPath }: LoginFormProps) {
     return callbackUrl.toString();
   };
 
-  const handleGoogleLogin = () => {
+  const handleGoogleLogin = async () => {
     setMessage(null);
+    setIsPending(true);
 
     try {
       const supabase = createClient();
 
-      supabase.auth
-        .signInWithOAuth({
-          provider: "google",
-          options: {
-            redirectTo: buildCallbackUrl(),
-          },
-        })
-        .then(({ error }) => {
-          if (error) {
-            setMessage("No se pudo iniciar con Google. Intenta nuevamente.");
-          }
-        })
-        .catch(() => {
-          setMessage("Faltan variables de entorno de Supabase. Configura .env.local y vuelve a intentar.");
-        });
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: buildCallbackUrl(),
+        },
+      });
+
+      if (error) {
+        setMessage("No se pudo iniciar con Google. Intenta nuevamente.");
+        setIsPending(false);
+      }
     } catch {
       setMessage("Faltan variables de entorno de Supabase. Configura .env.local y vuelve a intentar.");
+      setIsPending(false);
     }
   };
 
@@ -62,19 +60,20 @@ export function LoginForm({ nextPath }: LoginFormProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: email.trim(),
-          password: password.trim(),
+          password,
         }),
       });
 
       if (!response.ok) {
-        const error = await response.json();
+        const error = await response.json().catch(() => null);
         setMessage(error.error || "No se pudo iniciar sesión. Verifica tus credenciales.");
         setIsPending(false);
         return;
       }
 
       const payload = await response.json();
-      router.push(payload.redirectTo || nextPath);
+      router.replace(payload.redirectTo || nextPath);
+      router.refresh();
     } catch {
       setMessage("Error de conexión. Intenta nuevamente.");
     } finally {
@@ -83,12 +82,12 @@ export function LoginForm({ nextPath }: LoginFormProps) {
   };
 
   return (
-    <div className="space-y-4 rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
+    <div className="ui-card space-y-5 rounded-lg p-5 sm:p-6">
       <button
         type="button"
         onClick={handleGoogleLogin}
         disabled={isPending}
-        className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-zinc-300 bg-white px-4 py-2.5 text-sm font-semibold text-zinc-800 transition hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-70"
+        className="ui-button-secondary w-full"
       >
         <ShieldCheck className="size-4" />
         {isPending ? "Conectando..." : "Continuar con Google"}
@@ -101,53 +100,53 @@ export function LoginForm({ nextPath }: LoginFormProps) {
       </div>
 
       <form onSubmit={handlePasswordLogin} className="space-y-4">
-        <label className="block text-sm font-medium text-zinc-700" htmlFor="email">
-          Correo
+        <label className="block space-y-1.5 text-sm font-medium text-zinc-700" htmlFor="email">
+          <span>Correo</span>
+          <span className="relative block">
+            <Mail className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-400" />
+            <input
+              id="email"
+              name="email"
+              type="email"
+              autoComplete="email"
+              required
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              placeholder="tu-correo@ejemplo.com"
+              className="ui-field ui-field-icon-start"
+            />
+          </span>
         </label>
-        <div className="relative">
-          <Mail className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-400" />
-          <input
-            id="email"
-            name="email"
-            type="email"
-            autoComplete="email"
-            required
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            placeholder="tu-correo@ejemplo.com"
-            className="w-full rounded-xl border border-zinc-300 px-10 py-2.5 text-sm outline-none ring-offset-2 transition focus:border-zinc-900 focus:ring-2 focus:ring-zinc-900"
-          />
-        </div>
 
-        <label className="block text-sm font-medium text-zinc-700" htmlFor="password">
-          Contraseña
+        <label className="block space-y-1.5 text-sm font-medium text-zinc-700" htmlFor="password">
+          <span>Contraseña</span>
+          <span className="relative block">
+            <KeyRound className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-400" />
+            <input
+              id="password"
+              name="password"
+              type="password"
+              autoComplete="current-password"
+              required
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              placeholder="Tu contraseña"
+              className="ui-field ui-field-icon-start"
+            />
+          </span>
         </label>
-        <div className="relative">
-          <KeyRound className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-400" />
-          <input
-            id="password"
-            name="password"
-            type="password"
-            autoComplete="current-password"
-            required
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            placeholder="Tu contraseña"
-            className="w-full rounded-xl border border-zinc-300 px-10 py-2.5 text-sm outline-none ring-offset-2 transition focus:border-zinc-900 focus:ring-2 focus:ring-zinc-900"
-          />
-        </div>
 
         <button
           type="submit"
           disabled={isPending}
-          className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-zinc-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-zinc-700 disabled:cursor-not-allowed disabled:bg-zinc-500"
+          className="ui-button-primary w-full"
         >
           <Send className="size-4" />
           {isPending ? "Iniciando sesión..." : "Iniciar sesión"}
         </button>
       </form>
 
-      {message ? <p className="text-sm text-zinc-600">{message}</p> : null}
+      {message ? <p className="ui-alert ui-alert-warning">{message}</p> : null}
     </div>
   );
 }
