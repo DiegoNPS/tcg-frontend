@@ -1,5 +1,4 @@
 import { ArrowRight, CalendarClock, CalendarDays, MapPin, Search, Sparkles, Store, Trophy, UserRound, Users, type LucideIcon } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
 
 import { GameCarousel } from "@/components/home/game-carousel";
@@ -74,19 +73,11 @@ export default async function HomePage() {
       <section className="ui-section-line border-b border-zinc-200">
         <div className="ui-shell py-7 sm:py-9">
           <div className="max-w-3xl">
-            <Image
-              src="/brand/tcg-tournaments-logo-crop.png"
-              alt="TCG Tournaments"
-              width={280}
-              height={124}
-              className="mb-5 h-auto w-52 sm:w-64"
-              priority
-            />
             <p className="ui-eyebrow inline-flex items-center gap-2">
               <Sparkles className="size-3.5 text-[var(--accent-alt)]" />
               Eventos TCG en Chile
             </p>
-            <h1 className="mt-3 text-3xl font-black tracking-tight text-zinc-900 sm:text-5xl">
+            <h1 className="mt-3 max-w-2xl text-balance text-3xl font-black tracking-tight text-zinc-900 sm:text-5xl">
               Encuentra tu próximo torneo.
             </h1>
           </div>
@@ -107,8 +98,8 @@ export default async function HomePage() {
                 <p className="text-[11px] font-semibold uppercase text-zinc-500">Juegos</p>
               </div>
               <div className="ui-card-soft rounded-lg px-3 py-3">
-                <p className="text-xl font-black text-zinc-900">24/7</p>
-                <p className="text-[11px] font-semibold uppercase text-zinc-500">Activo</p>
+                <p className="text-xl font-black text-zinc-900">CL</p>
+                <p className="text-[11px] font-semibold uppercase text-zinc-500">Cobertura</p>
               </div>
             </div>
           </div>
@@ -146,10 +137,9 @@ export default async function HomePage() {
       <section className="ui-shell py-8">
         <div className="mb-4 flex items-center justify-between gap-3">
           <div>
-            <p className="ui-eyebrow">Agenda</p>
             <h2 className="text-2xl font-black text-zinc-900">Eventos destacados</h2>
           </div>
-          <Link href="/torneos" className="text-sm font-semibold text-[var(--accent)]">
+          <Link href="/torneos" className="ui-text-action text-sm font-semibold text-[var(--accent)]">
             Ver todos
           </Link>
         </div>
@@ -207,24 +197,31 @@ export default async function HomePage() {
             })}
           </div>
         ) : (
-          <div className="ui-card rounded-lg p-8 text-sm text-zinc-600">
-            No hay eventos próximos publicados para mostrar todavía.
+          <div className="ui-card rounded-lg p-8">
+            <h3 className="text-lg font-semibold text-zinc-900">La próxima ronda aún no está publicada</h3>
+            <p className="mt-2 max-w-xl text-sm leading-6 text-zinc-600">
+              Explora el historial disponible o vuelve pronto para encontrar nuevos torneos.
+            </p>
+            <Link href="/torneos" className="ui-button-secondary mt-5">
+              Explorar todos los torneos
+              <ArrowRight className="size-4" aria-hidden="true" />
+            </Link>
           </div>
         )}
       </section>
 
       <section className="ui-shell grid gap-5 pb-10">
-        <div className="grid min-w-0 items-start gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(16rem,22.5rem)]">
+        <div className={`grid min-w-0 items-start gap-5 ${upcomingTorneos.length ? "xl:grid-cols-[minmax(0,1fr)_minmax(16rem,22.5rem)]" : ""}`}>
+          {upcomingTorneos.length ? (
           <div className="ui-card min-w-0 overflow-hidden rounded-lg">
             <div className="flex items-center justify-between border-b border-zinc-200 px-4 py-3">
               <h2 className="text-sm font-semibold text-zinc-900">Agenda rápida</h2>
-              <Link href="/torneos" className="text-xs font-semibold text-[var(--accent)]">
+              <Link href="/torneos" className="ui-text-action text-xs font-semibold text-[var(--accent)]">
                 Abrir calendario
               </Link>
             </div>
             <div className="divide-y divide-zinc-100">
-              {upcomingTorneos.length ? (
-                upcomingTorneos.map((torneo) => {
+              {upcomingTorneos.map((torneo) => {
                   const fecha = new Date(torneo.fecha_inicio);
                   return (
                     <Link
@@ -260,20 +257,15 @@ export default async function HomePage() {
                       </div>
                     </Link>
                   );
-                })
-              ) : (
-                <div className="px-4 py-8 text-sm text-zinc-600">
-                  No hay eventos próximos publicados para mostrar todavía.
-                </div>
-              )}
+                })}
             </div>
           </div>
+          ) : null}
 
           <aside className="ui-card min-w-0 rounded-lg p-4">
             <div className="mb-4 flex items-center justify-between">
               <div>
-                <p className="ui-eyebrow">Accesos</p>
-                <h2 className="text-sm font-semibold text-zinc-900">Acciones rápidas</h2>
+                <h2 className="text-base font-semibold text-zinc-900">Acciones rápidas</h2>
               </div>
               <ArrowRight className="size-4 text-[var(--accent)]" />
             </div>
@@ -298,10 +290,9 @@ export default async function HomePage() {
         <section className="pt-2">
           <div className="mb-3 flex items-center justify-between gap-3">
             <div>
-              <p className="ui-eyebrow">Explorar</p>
               <h2 className="text-lg font-semibold text-zinc-900">Juegos destacados</h2>
             </div>
-            <Link href="/torneos" className="text-sm font-semibold text-[var(--accent)]">
+            <Link href="/torneos" className="ui-text-action text-sm font-semibold text-[var(--accent)]">
               Ver todos
             </Link>
           </div>

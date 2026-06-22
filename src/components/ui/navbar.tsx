@@ -1,14 +1,14 @@
-import { LayoutDashboard, LogOut, PlusCircle, Shield, Store, Ticket, User } from "lucide-react";
+import { LogOut, Shield } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
 import { signOut } from "@/actions/auth";
+import { NavLinks } from "@/components/ui/nav-links";
 import { fetchMe } from "@/lib/auth/fetch-me";
 import { LOGIN_PATH, SIGNUP_PATH } from "@/lib/auth/routes";
 
 export async function Navbar() {
   const me = await fetchMe();
-
   const userEmail = me?.user.email ?? null;
   const isTienda = me?.isTienda ?? false;
   const isAdmin = me?.profile?.user_role === "admin";
@@ -16,8 +16,8 @@ export async function Navbar() {
 
   return (
     <header className="ui-topbar sticky top-0 z-20">
-      <div className="ui-shell flex min-h-[5.5rem] min-w-0 items-center gap-3 py-3 sm:gap-4">
-        <Link href="/" className="inline-flex shrink-0 items-center text-white" aria-label="TCG Tournaments">
+      <div className="ui-shell grid min-h-[5.5rem] min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 py-2 sm:gap-x-4 md:py-3">
+        <Link href="/" className="inline-flex min-h-11 shrink-0 items-center text-white" aria-label="TCG Tournaments">
           <Image
             src="/brand/tcg-tournaments-logo-crop.png"
             alt="TCG Tournaments"
@@ -28,74 +28,16 @@ export async function Navbar() {
           />
         </Link>
 
-        <nav aria-label="Navegación principal" className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto text-sm [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          <Link
-            href="/torneos"
-            className="ui-nav-link"
-          >
-            <Ticket className="size-4" />
-            Eventos
-          </Link>
+        <NavLinks isAdmin={isAdmin} isJugador={isJugador} isTienda={isTienda} />
 
-          <Link
-            href="/tienda/nuevo-torneo"
-            className="ui-nav-link"
-          >
-            <PlusCircle className="size-4" />
-            Publicar evento
-          </Link>
-
-          {isTienda ? (
-            <>
-              <Link
-                href="/tienda/dashboard"
-                className="ui-nav-link"
-              >
-                <Store className="size-4" />
-                Panel de tienda
-              </Link>
-            </>
-          ) : null}
-
-          {isJugador ? (
-            <>
-              <Link
-                href="/jugador/inscripciones"
-                className="ui-nav-link"
-              >
-                <User className="size-4" />
-                Mis inscripciones
-              </Link>
-              <Link
-                href="/jugador/perfil"
-                className="ui-nav-link"
-              >
-                <User className="size-4" />
-                Mi perfil
-              </Link>
-            </>
-          ) : null}
-
-          {isAdmin ? (
-            <Link
-              href="/admin"
-              className="ui-nav-link"
-            >
-              <LayoutDashboard className="size-4" />
-              Administración
-            </Link>
-          ) : null}
-
-        </nav>
-
-        <div className="ml-auto flex shrink-0 items-center gap-2">
+        <div className="col-start-3 row-start-1 ml-auto flex shrink-0 items-center gap-2">
           {!userEmail ? (
             <>
               <Link
                 href={LOGIN_PATH}
-                className="ui-button-ghost hidden min-h-0 px-3 py-2 sm:inline-flex"
+                className="ui-button-ghost ui-auth-login min-h-0 px-3 py-2"
               >
-                <Shield className="size-4" />
+                <Shield className="size-4" aria-hidden="true" />
                 Iniciar sesión
               </Link>
               <Link
@@ -113,8 +55,9 @@ export async function Navbar() {
                 className="ui-button-ghost min-h-0 px-3 py-2"
                 title={userEmail}
               >
-                <LogOut className="size-4" />
+                <LogOut className="size-4" aria-hidden="true" />
                 <span className="hidden sm:inline">Cerrar sesión</span>
+                <span className="sr-only sm:hidden">Cerrar sesión</span>
               </button>
             </form>
           )}

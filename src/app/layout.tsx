@@ -2,13 +2,14 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 import { Navbar } from "@/components/ui/navbar";
+import { Footer } from "@/components/ui/footer";
 
 export const metadata: Metadata = {
   title: {
-    default: "TCG Torneos",
-    template: "%s | TCG Torneos",
+    default: "TCG Tournaments",
+    template: "%s | TCG Tournaments",
   },
-  description: "Gestiona y publica torneos de trading card games con Supabase y Next.js.",
+  description: "Descubre, publica y gestiona torneos de trading card games en Chile.",
 };
 
 export default function RootLayout({
@@ -30,6 +31,7 @@ export default function RootLayout({
           <div id="main-content" tabIndex={-1} className="flex flex-1 flex-col">
             {children}
           </div>
+          <Footer />
         </div>
       </body>
     </html>

@@ -61,7 +61,7 @@ export default async function InscripcionesPage() {
             No se pudieron cargar tus inscripciones en este momento. Intenta refrescar la pagina.
           </p>
         ) : entries.length > 0 ? (
-          <InscripcionesList entries={entries} />
+          <InscripcionesList entries={entries} referenceTime={new Date().toISOString()} />
         ) : (
           <p className="text-sm text-zinc-600">Aun no tienes inscripciones.</p>
         )}

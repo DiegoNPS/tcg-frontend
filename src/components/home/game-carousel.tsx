@@ -45,7 +45,7 @@ export function GameCarousel({ items }: GameCarouselProps) {
         left: Math.min(list.clientWidth * 0.72, 320),
         behavior: "smooth",
       });
-    }, 3200);
+    }, 5000);
 
     return () => window.clearInterval(interval);
   }, [isPaused, items.length]);
@@ -66,7 +66,7 @@ export function GameCarousel({ items }: GameCarouselProps) {
           <Link
             key={item.href}
             aria-label={`Ver torneos de ${item.label}`}
-            className="group relative h-48 min-w-[230px] max-w-[calc(100vw-2rem)] snap-start overflow-hidden rounded-lg border border-zinc-200 transition hover:-translate-y-0.5 hover:border-[var(--accent)] hover:shadow-[0_16px_40px_rgba(106,169,245,0.18)] sm:min-w-[270px]"
+            className="ui-game-card group relative h-48 min-w-[230px] max-w-[calc(100vw-2rem)] snap-start overflow-hidden rounded-lg border border-zinc-200 sm:min-w-[270px]"
             href={item.href}
             style={{
               backgroundImage: item.backgroundImage,
@@ -86,7 +86,7 @@ export function GameCarousel({ items }: GameCarouselProps) {
       <button
         type="button"
         aria-label="Anterior"
-        className="absolute left-0 top-1/2 hidden -translate-y-1/2 items-center justify-center rounded-full border border-zinc-200 bg-white/90 p-2 text-zinc-700 shadow-sm transition hover:bg-white sm:flex"
+        className="absolute left-0 top-1/2 hidden size-11 -translate-y-1/2 items-center justify-center rounded-full border border-zinc-200 bg-white/90 text-zinc-700 shadow-sm transition hover:bg-white sm:flex"
         onClick={() => scrollByAmount("left")}
       >
         <ChevronLeft className="size-4" />
@@ -94,7 +94,7 @@ export function GameCarousel({ items }: GameCarouselProps) {
       <button
         type="button"
         aria-label="Siguiente"
-        className="absolute right-0 top-1/2 hidden -translate-y-1/2 items-center justify-center rounded-full border border-zinc-200 bg-white/90 p-2 text-zinc-700 shadow-sm transition hover:bg-white sm:flex"
+        className="absolute right-0 top-1/2 hidden size-11 -translate-y-1/2 items-center justify-center rounded-full border border-zinc-200 bg-white/90 text-zinc-700 shadow-sm transition hover:bg-white sm:flex"
         onClick={() => scrollByAmount("right")}
       >
         <ChevronRight className="size-4" />

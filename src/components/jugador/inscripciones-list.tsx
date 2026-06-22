@@ -2,6 +2,12 @@
 
 import { useMemo, useState } from "react";
 
+const dateTimeFormatter = new Intl.DateTimeFormat("es-CL", {
+  dateStyle: "medium",
+  timeStyle: "short",
+  timeZone: "America/Santiago",
+});
+
 type TorneoInfo = {
   id: string;
   titulo: string;
@@ -37,12 +43,18 @@ const statusClasses: Record<string, string> = {
 
 const cancellableStatuses = new Set(["registered", "waitlisted"]);
 
-export function InscripcionesList({ entries }: { entries: EntryInfo[] }) {
+export function InscripcionesList({
+  entries,
+  referenceTime,
+}: {
+  entries: EntryInfo[];
+  referenceTime: string;
+}) {
   const [items, setItems] = useState<EntryInfo[]>(entries);
   const [message, setMessage] = useState<{ text: string; tone: "success" | "error" } | null>(null);
   const [loadingId, setLoadingId] = useState<string | null>(null);
 
-  const now = useMemo(() => new Date(), []);
+  const now = useMemo(() => new Date(referenceTime), [referenceTime]);
   const activeEntries = items.filter((entry) => !["dropped", "eliminated"].includes(entry.status));
   const historyEntries = items.filter((entry) => ["dropped", "eliminated"].includes(entry.status));
 
@@ -93,7 +105,7 @@ export function InscripcionesList({ entries }: { entries: EntryInfo[] }) {
           <p className="text-zinc-600">
             {torneo?.tienda_nombre ?? "Tienda independiente"}
             {torneo?.ciudad ? ` · ${torneo.ciudad}` : ""}
-            {fecha ? ` · ${fecha.toLocaleString("es-ES")}` : ""}
+            {fecha ? ` · ${dateTimeFormatter.format(fecha)}` : ""}
           </p>
           <p className="text-xs text-zinc-500">Entrada: {costoLabel}</p>
           {entry.status === "waitlisted" ? (

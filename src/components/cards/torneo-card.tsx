@@ -36,6 +36,7 @@ const dateFormatter = new Intl.DateTimeFormat("es-CL", {
   year: "numeric",
   hour: "2-digit",
   minute: "2-digit",
+  timeZone: "America/Santiago",
 });
 
 export function TorneoCard({ torneo, canInscribirse, isAuthenticated, yaInscripto, isPast = false }: TorneoCardProps) {

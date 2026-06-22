@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 
+const EXIT_DURATION_MS = 180;
+
 type NoticeTone = "success" | "warning" | "error" | "info";
 
 type NoticeToastProps = {
@@ -35,18 +37,34 @@ const toneStyles: Record<NoticeTone, { container: string; dot: string }> = {
 
 export function NoticeToast({ message, tone = "info", durationMs = 6000 }: NoticeToastProps) {
   const [visible, setVisible] = useState(true);
+  const [entered, setEntered] = useState(false);
 
   useEffect(() => {
-    const timer = window.setTimeout(() => setVisible(false), durationMs);
-    return () => window.clearTimeout(timer);
+    const frame = window.requestAnimationFrame(() => setEntered(true));
+    const exitTimer = window.setTimeout(
+      () => setEntered(false),
+      Math.max(0, durationMs - EXIT_DURATION_MS),
+    );
+    const hideTimer = window.setTimeout(() => setVisible(false), durationMs);
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.clearTimeout(exitTimer);
+      window.clearTimeout(hideTimer);
+    };
   }, [durationMs]);
+
+  const dismiss = () => {
+    setEntered(false);
+    window.setTimeout(() => setVisible(false), EXIT_DURATION_MS);
+  };
 
   if (!visible) return null;
 
   return (
     <div className="pointer-events-none fixed inset-x-4 top-6 z-50 flex justify-center sm:inset-x-auto sm:right-6 sm:left-auto">
       <div
-        className={`toast-enter pointer-events-auto w-full max-w-md rounded-2xl border px-4 py-3 shadow-lg ${toneStyles[tone].container}`}
+        className={`toast-transition pointer-events-auto w-full max-w-md rounded-2xl border px-4 py-3 shadow-lg ${entered ? "toast-visible" : ""} ${toneStyles[tone].container}`}
         role={tone === "error" ? "alert" : "status"}
         aria-live={tone === "error" ? "assertive" : "polite"}
       >
@@ -55,7 +73,7 @@ export function NoticeToast({ message, tone = "info", durationMs = 6000 }: Notic
           <p className="flex-1 text-sm font-semibold leading-relaxed">{message}</p>
           <button
             type="button"
-            onClick={() => setVisible(false)}
+            onClick={dismiss}
             className="rounded-full px-2 py-1 text-xs font-semibold text-current/70 transition hover:text-current"
             aria-label="Cerrar notificación"
           >
@@ -65,22 +83,20 @@ export function NoticeToast({ message, tone = "info", durationMs = 6000 }: Notic
       </div>
 
       <style jsx>{`
-        .toast-enter {
-          animation: toast-in 280ms ease-out;
+        .toast-transition {
+          opacity: 0;
+          transform: translateY(-8px) scale(0.98);
+          transition:
+            opacity ${EXIT_DURATION_MS}ms cubic-bezier(0.16, 1, 0.3, 1),
+            transform ${EXIT_DURATION_MS}ms cubic-bezier(0.16, 1, 0.3, 1);
         }
-        @keyframes toast-in {
-          from {
-            opacity: 0;
-            transform: translateY(-8px) scale(0.98);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-          }
+        .toast-visible {
+          opacity: 1;
+          transform: translateY(0) scale(1);
         }
         @media (prefers-reduced-motion: reduce) {
-          .toast-enter {
-            animation: none;
+          .toast-transition {
+            transition: none;
           }
         }
       `}</style>

@@ -1,6 +1,7 @@
 "use client";
 
 import { Globe, KeyRound, Mail, Send, ShieldCheck, User } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -201,10 +202,8 @@ export function SignupForm({ nextPath }: SignupFormProps) {
 
       <form onSubmit={handlePasswordSignup} className="space-y-6">
         <div className="grid gap-6 lg:grid-cols-2">
-          <section className="space-y-4">
-            <div className="space-y-1">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">Datos personales</p>
-            </div>
+          <fieldset className="space-y-4">
+            <legend className="mb-4 text-base font-semibold text-zinc-900">Datos personales</legend>
 
             <label className="flex flex-col gap-1.5 text-sm">
               <span className="font-medium text-zinc-700">Nombre de usuario</span>
@@ -269,12 +268,13 @@ export function SignupForm({ nextPath }: SignupFormProps) {
                 />
               </div>
             </label>
-          </section>
+          </fieldset>
 
-          <section className="space-y-4">
-            <div className="space-y-1">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">Dirección de contacto</p>
-            </div>
+          <fieldset className="space-y-4">
+            <legend className="text-base font-semibold text-zinc-900">Dirección de contacto</legend>
+            <p className="text-xs leading-5 text-zinc-600">
+              Se utiliza para completar tu perfil y contextualizar tu ubicación como jugador.
+            </p>
 
             <DireccionAutocomplete
               name="address"
@@ -339,7 +339,7 @@ export function SignupForm({ nextPath }: SignupFormProps) {
                 </div>
               </label>
             </div>
-          </section>
+          </fieldset>
         </div>
 
         <div className="ui-card-soft space-y-3 rounded-lg px-4 py-4">
@@ -348,12 +348,14 @@ export function SignupForm({ nextPath }: SignupFormProps) {
               type="checkbox"
               checked={acceptTerms}
               onChange={(event) => setAcceptTerms(event.target.checked)}
+              aria-describedby="legal-links"
               className="mt-1 size-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900"
             />
-            <span>
-              Acepto los <span className="font-medium text-zinc-900">Términos y Condiciones</span> y la <span className="font-medium text-zinc-900">Política de Privacidad</span>.
-            </span>
+            <span>Acepto los términos y la política de privacidad.</span>
           </label>
+          <p id="legal-links" className="pl-7 text-xs leading-5 text-zinc-600">
+            Consulta los <Link href="/terminos" className="font-semibold text-[var(--accent)] underline underline-offset-4">Términos y condiciones</Link> y la <Link href="/privacidad" className="font-semibold text-[var(--accent)] underline underline-offset-4">Política de privacidad</Link> antes de continuar.
+          </p>
 
           <label className="flex items-start gap-3 text-sm text-zinc-700">
             <input

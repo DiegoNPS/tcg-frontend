@@ -45,9 +45,6 @@ export default async function SignupPage({ searchParams }: SignupPageProps) {
         <section className="mx-auto w-full max-w-2xl">
           <div className="space-y-5">
             <div className="space-y-1">
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-zinc-500">
-                Datos de acceso
-              </p>
               <h2 className="text-xl font-semibold tracking-tight text-zinc-900">
                 Datos de cuenta
               </h2>

@@ -41,7 +41,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
       <div className="space-y-6">
         <div className="space-y-2">
           <p className="text-xs font-semibold uppercase text-zinc-500">Cuenta</p>
-          <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">Accede a TCG Hub</h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">Accede a TCG Tournaments</h1>
           <p className="text-sm text-zinc-600">
             Inicia sesión con tu cuenta (correo y contraseña) o con Google.
           </p>

@@ -314,7 +314,6 @@ export default async function TorneosPage({ searchParams }: TorneosPageProps) {
             <section className="space-y-4">
             <div className="flex flex-wrap items-end justify-between gap-3">
               <div>
-                <p className="ui-eyebrow">Agenda</p>
                 <h2 className="text-xl font-semibold text-zinc-900">Próximos torneos</h2>
               </div>
               <span className="ui-badge ui-badge-accent">{proximosTorneos.length} activos</span>
@@ -346,7 +345,6 @@ export default async function TorneosPage({ searchParams }: TorneosPageProps) {
               <section className="space-y-4">
                 <div className="flex flex-wrap items-end justify-between gap-3 border-t border-zinc-200 pt-6">
                   <div>
-                    <p className="ui-eyebrow">Historial</p>
                     <h2 className="text-xl font-semibold text-zinc-900">Torneos finalizados</h2>
                   </div>
                   <span className="ui-badge">{torneosFinalizados.length} pasados</span>
