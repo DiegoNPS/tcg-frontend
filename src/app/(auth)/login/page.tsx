@@ -1,17 +1,20 @@
 import Link from "next/link";
 
 import { LoginForm } from "@/components/forms/login-form";
-import { DEFAULT_POST_LOGIN_PATH } from "@/lib/auth/routes";
 
 type LoginPageProps = {
-  searchParams: Promise<{ next?: string | string[]; error?: string | string[] }>;
+  searchParams: Promise<{
+    next?: string | string[];
+    error?: string | string[];
+    password?: string | string[];
+  }>;
 };
 
 function sanitizeNextPath(value: string | string[] | undefined) {
   const nextValue = Array.isArray(value) ? value[0] : value;
 
   if (!nextValue || !nextValue.startsWith("/") || nextValue.startsWith("//")) {
-    return "/tienda/dashboard";
+    return undefined;
   }
 
   return nextValue;
@@ -29,8 +32,9 @@ function getErrorMessage(value: string | string[] | undefined) {
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
   const params = await searchParams;
-  const nextPath = sanitizeNextPath(params.next) || DEFAULT_POST_LOGIN_PATH;
+  const nextPath = sanitizeNextPath(params.next);
   const errorMessage = getErrorMessage(params.error);
+  const passwordStatus = Array.isArray(params.password) ? params.password[0] : params.password;
 
   return (
     <main className="mx-auto flex w-full max-w-xl flex-1 flex-col justify-center px-4 py-10">
@@ -45,11 +49,23 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
 
         <LoginForm nextPath={nextPath} />
 
+        {passwordStatus === "updated" ? (
+          <p className="ui-alert ui-alert-success" role="status">
+            Contraseña actualizada. Ya puedes iniciar sesión.
+          </p>
+        ) : null}
+
         {errorMessage ? (
           <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
             {errorMessage}
           </p>
         ) : null}
+
+        <p className="text-sm text-zinc-600">
+          <Link href="/forgot-password" className="font-medium text-zinc-900 underline underline-offset-4">
+            ¿Olvidaste tu contraseña?
+          </Link>
+        </p>
 
         <p className="text-sm text-zinc-600">
           No tienes cuenta?{" "}

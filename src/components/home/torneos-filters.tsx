@@ -2,7 +2,7 @@
 
 import { ListFilter, MapPin, RotateCcw, Search } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 
 import { CATEGORIA_OPTIONS, TCG_OPTIONS } from "@/lib/constants";
 
@@ -25,10 +25,13 @@ export function TorneosFilters({ initialValues, juegos }: TorneosFiltersProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
+  const [cityQuery, setCityQuery] = useState(initialValues.ciudad);
   const gameOptions = juegos.length ? juegos : TCG_OPTIONS;
 
   const updateParam = (key: string, value: string) => {
     const params = new URLSearchParams(searchParams.toString());
+    params.delete("inscripcion");
+    params.delete("torneo");
 
     if (value) {
       params.set(key, value);
@@ -44,6 +47,7 @@ export function TorneosFilters({ initialValues, juegos }: TorneosFiltersProps) {
   };
 
   const clearFilters = () => {
+    setCityQuery("");
     startTransition(() => {
       router.replace(pathname);
     });
@@ -55,7 +59,8 @@ export function TorneosFilters({ initialValues, juegos }: TorneosFiltersProps) {
         <label className="ui-searchbar min-h-[3.25rem]">
           <Search className="size-5 shrink-0 text-[var(--accent)]" />
           <input
-            defaultValue={initialValues.ciudad}
+            value={cityQuery}
+            onChange={(event) => setCityQuery(event.target.value)}
             onBlur={(event) => updateParam("ciudad", event.target.value.trim())}
             onKeyDown={(event) => {
               if (event.key === "Enter") {

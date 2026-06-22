@@ -95,7 +95,6 @@ export default async function HomePage() {
             <Link href="/torneos" className="ui-searchbar max-w-3xl">
               <Search className="size-5 shrink-0 text-[var(--accent)]" />
               <span className="min-w-0 flex-1 text-sm font-medium sm:text-base">Buscar eventos, juegos o comunas...</span>
-              <kbd className="hidden rounded border border-zinc-200 px-2 py-1 text-xs text-zinc-500 sm:inline-flex">/</kbd>
             </Link>
 
             <div className="grid min-w-0 grid-cols-3 gap-2 text-center">

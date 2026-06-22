@@ -28,7 +28,7 @@ export async function Navbar() {
           />
         </Link>
 
-        <nav className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto text-sm [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <nav aria-label="Navegación principal" className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto text-sm [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <Link
             href="/torneos"
             className="ui-nav-link"

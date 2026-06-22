@@ -49,6 +49,25 @@ body {
   color: #f8fffb;
 }
 
+.ui-skip-link {
+  position: fixed;
+  top: 0.75rem;
+  left: 0.75rem;
+  z-index: 100;
+  transform: translateY(-160%);
+  border-radius: 0.5rem;
+  background: var(--accent);
+  padding: 0.7rem 1rem;
+  color: #06101c;
+  font-size: 0.875rem;
+  font-weight: 800;
+  transition: transform 160ms ease;
+}
+
+.ui-skip-link:focus {
+  transform: translateY(0);
+}
+
 button,
 a,
 input,
@@ -460,5 +479,16 @@ textarea:focus-visible {
 @media (min-width: 640px) {
   .ui-shell {
     padding-inline: clamp(1.25rem, 4vw, 2rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

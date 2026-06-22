@@ -47,8 +47,8 @@ export function NoticeToast({ message, tone = "info", durationMs = 6000 }: Notic
     <div className="pointer-events-none fixed inset-x-4 top-6 z-50 flex justify-center sm:inset-x-auto sm:right-6 sm:left-auto">
       <div
         className={`toast-enter pointer-events-auto w-full max-w-md rounded-2xl border px-4 py-3 shadow-lg ${toneStyles[tone].container}`}
-        role="status"
-        aria-live="polite"
+        role={tone === "error" ? "alert" : "status"}
+        aria-live={tone === "error" ? "assertive" : "polite"}
       >
         <div className="flex items-start gap-3">
           <span className={`mt-1 h-2.5 w-2.5 rounded-full ${toneStyles[tone].dot}`} />

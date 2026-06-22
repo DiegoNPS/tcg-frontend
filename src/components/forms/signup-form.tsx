@@ -376,7 +376,7 @@ export function SignupForm({ nextPath }: SignupFormProps) {
         </button>
       </form>
 
-      {message ? <p className="ui-alert ui-alert-warning">{message}</p> : null}
+      {message ? <p className="ui-alert ui-alert-warning" role="status">{message}</p> : null}
     </div>
   );
 }

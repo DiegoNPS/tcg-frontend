@@ -39,6 +39,8 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
 
   let tienda: TiendaPayload | null = null;
   let torneos: TorneoPayload[] = [];
+  let tiendaLoadError = false;
+  let torneosLoadError = false;
 
   if (baseUrl) {
     try {
@@ -56,17 +58,36 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
       if (tiendaRes.ok) {
         const { data } = (await tiendaRes.json()) as { data: TiendaPayload | null };
         tienda = data;
+      } else {
+        tiendaLoadError = true;
       }
       if (torneosRes.ok) {
         const { data } = (await torneosRes.json()) as { data: TorneoPayload[] | null };
         torneos = data ?? [];
+      } else {
+        torneosLoadError = true;
       }
     } catch {
-      // estado vacío abajo
+      tiendaLoadError = true;
+      torneosLoadError = true;
     }
+  } else {
+    tiendaLoadError = true;
+    torneosLoadError = true;
   }
 
   const errorMessage = params.error ? errorMessages[params.error] : null;
+
+  if (tiendaLoadError) {
+    return (
+      <main className="ui-shell flex flex-1 flex-col py-10">
+        <h1 className="text-2xl font-bold text-zinc-900">Panel de tienda</h1>
+        <p className="ui-alert ui-alert-danger mt-3" role="alert">
+          No se pudo cargar tu tienda. Intenta nuevamente en unos minutos.
+        </p>
+      </main>
+    );
+  }
 
   if (!tienda) {
     return (
@@ -124,6 +145,12 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
       {errorMessage ? (
         <p className="ui-alert ui-alert-danger">
           {errorMessage}
+        </p>
+      ) : null}
+
+      {torneosLoadError ? (
+        <p className="ui-alert ui-alert-warning" role="alert">
+          La tienda cargó correctamente, pero no pudimos obtener sus torneos.
         </p>
       ) : null}
 

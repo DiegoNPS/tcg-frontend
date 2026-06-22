@@ -1,7 +1,7 @@
 "use client";
 
 import { ImageIcon, X } from "lucide-react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { createClient } from "@/lib/supabase/client";
 
@@ -16,6 +16,12 @@ export function ImagenUpload({ defaultValue, onUpload }: ImagenUploadProps) {
   const [error, setError] = useState<string | null>(null);
   const [url, setUrl] = useState<string>(defaultValue ?? "");
   const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    return () => {
+      if (preview?.startsWith("blob:")) URL.revokeObjectURL(preview);
+    };
+  }, [preview]);
 
   async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -35,42 +41,47 @@ export function ImagenUpload({ defaultValue, onUpload }: ImagenUploadProps) {
     setUploading(true);
     setPreview(URL.createObjectURL(file));
 
-    const supabase = createClient();
+    try {
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      setError("Debes estar autenticado para subir imágenes.");
+      if (!user) {
+        setError("Debes estar autenticado para subir imágenes.");
+        setPreview(defaultValue ?? null);
+        return;
+      }
+
+      const rawExtension = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
+      const extension = /^[a-z0-9]{2,5}$/.test(rawExtension) ? rawExtension : "jpg";
+      const path = `${user.id}/${crypto.randomUUID()}.${extension}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("torneos")
+        .upload(path, file, { contentType: file.type, upsert: false });
+
+      if (uploadError) {
+        setError("Error al subir la imagen. Intenta nuevamente.");
+        setPreview(defaultValue ?? null);
+        return;
+      }
+
+      const { data } = supabase.storage.from("torneos").getPublicUrl(path);
+      setUrl(data.publicUrl);
+      onUpload?.(data.publicUrl);
+    } catch {
+      setError("No se pudo preparar la subida. Intenta nuevamente.");
       setPreview(defaultValue ?? null);
+    } finally {
       setUploading(false);
-      return;
     }
-
-    const ext = file.name.split(".").pop();
-    // Store under {user_id}/{uuid}.ext to enforce per-user RLS
-    const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
-
-    const { error: uploadError } = await supabase.storage
-      .from("torneos")
-      .upload(path, file, { upsert: true });
-
-    if (uploadError) {
-      setError("Error al subir la imagen. Intenta nuevamente.");
-      setPreview(defaultValue ?? null);
-      setUploading(false);
-      return;
-    }
-
-    const { data } = supabase.storage.from("torneos").getPublicUrl(path);
-    setUrl(data.publicUrl);
-    if (onUpload) {
-      onUpload(data.publicUrl);
-    }
-    setUploading(false);
   }
 
   function handleRemove() {
     setPreview(null);
     setUrl("");
+    onUpload?.("");
     if (inputRef.current) inputRef.current.value = "";
   }
 
@@ -81,11 +92,12 @@ export function ImagenUpload({ defaultValue, onUpload }: ImagenUploadProps) {
       {preview ? (
         <div className="relative w-full overflow-hidden rounded-lg border border-zinc-200">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={preview} alt="Preview" className="h-48 w-full object-cover" />
+          <img src={preview} alt="Vista previa de la imagen del torneo" className="h-48 w-full object-cover" />
           <button
             type="button"
             onClick={handleRemove}
             className="absolute right-2 top-2 rounded-full bg-black/60 p-1 text-white transition hover:bg-black/80"
+            aria-label="Quitar imagen del torneo"
           >
             <X size={14} />
           </button>
@@ -113,6 +125,7 @@ export function ImagenUpload({ defaultValue, onUpload }: ImagenUploadProps) {
         accept="image/*"
         onChange={handleFile}
         className="hidden"
+        aria-label="Seleccionar imagen del torneo"
       />
 
       {error ? <span className="text-xs text-rose-600">{error}</span> : null}

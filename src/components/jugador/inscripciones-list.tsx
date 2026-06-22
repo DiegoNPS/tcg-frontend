@@ -39,7 +39,7 @@ const cancellableStatuses = new Set(["registered", "waitlisted"]);
 
 export function InscripcionesList({ entries }: { entries: EntryInfo[] }) {
   const [items, setItems] = useState<EntryInfo[]>(entries);
-  const [message, setMessage] = useState<string | null>(null);
+  const [message, setMessage] = useState<{ text: string; tone: "success" | "error" } | null>(null);
   const [loadingId, setLoadingId] = useState<string | null>(null);
 
   const now = useMemo(() => new Date(), []);
@@ -60,7 +60,7 @@ export function InscripcionesList({ entries }: { entries: EntryInfo[] }) {
       const payload = await response.json();
 
       if (!response.ok) {
-        setMessage(payload.error || "No se pudo cancelar la inscripción.");
+        setMessage({ text: payload.error || "No se pudo cancelar la inscripción.", tone: "error" });
         setLoadingId(null);
         return;
       }
@@ -70,9 +70,9 @@ export function InscripcionesList({ entries }: { entries: EntryInfo[] }) {
           entry.id === entryId ? { ...entry, status: "dropped" } : entry,
         ),
       );
-      setMessage("Inscripción cancelada.");
+      setMessage({ text: "Inscripción cancelada.", tone: "success" });
     } catch {
-      setMessage("Error de conexión. Intenta nuevamente.");
+      setMessage({ text: "Error de conexión. Intenta nuevamente.", tone: "error" });
     } finally {
       setLoadingId(null);
     }
@@ -122,8 +122,11 @@ export function InscripcionesList({ entries }: { entries: EntryInfo[] }) {
   return (
     <div className="space-y-6">
       {message ? (
-        <p className="ui-alert ui-alert-success">
-          {message}
+        <p
+          className={`ui-alert ${message.tone === "success" ? "ui-alert-success" : "ui-alert-danger"}`}
+          role={message.tone === "error" ? "alert" : "status"}
+        >
+          {message.text}
         </p>
       ) : null}
 

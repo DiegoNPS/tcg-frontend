@@ -20,9 +20,8 @@ export async function requireAuthenticatedUser(nextPath: string): Promise<MePayl
 export async function requireStore() {
   const me = await requireAuthenticatedUser("/tienda/dashboard");
 
-  const isAdminUser = me.profile?.user_role === "admin";
-  if (!me.isTienda && !isAdminUser) {
-    redirect("/");
+  if (!me.isTienda) {
+    redirect("/tienda/crear");
   }
 }
 

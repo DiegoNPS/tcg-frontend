@@ -52,7 +52,7 @@ export function TiendaForm() {
   return (
     <form onSubmit={handleSubmit} className="ui-card max-w-xl space-y-4 rounded-lg p-5 sm:p-6">
       {error ? (
-        <p className="ui-alert ui-alert-danger">{error}</p>
+        <p className="ui-alert ui-alert-danger" role="alert">{error}</p>
       ) : null}
 
       <label className="flex flex-col gap-1 text-sm">

@@ -57,11 +57,13 @@ function isCategoriaTorneo(value: string): value is CategoriaTorneo {
 }
 
 const inscripcionMessages: Record<string, string> = {
-  ok: "Inscripcion completada.",
+  ok: "Inscripción completada.",
+  espera: "El torneo está completo. Quedaste en la lista de espera.",
   existente: "Ya estabas inscrito en este torneo.",
-  error: "No se pudo completar la inscripcion.",
+  error: "No se pudo completar la inscripción.",
   "no-jugador": "Solo jugadores pueden inscribirse a torneos.",
-  "torneo-invalido": "El torneo solicitado no es valido.",
+  "torneo-invalido": "El torneo solicitado no es válido.",
+  "torneo-cerrado": "Las inscripciones de este torneo están cerradas.",
 };
 
 function resolveNoticeTone(code?: string) {
@@ -69,10 +71,11 @@ function resolveNoticeTone(code?: string) {
     case "ok":
       return "success";
     case "existente":
-      return "warning";
+    case "espera":
     case "no-jugador":
       return "warning";
     case "torneo-invalido":
+    case "torneo-cerrado":
       return "error";
     case "error":
       return "error";
@@ -195,17 +198,32 @@ export default async function TorneosPage({ searchParams }: TorneosPageProps) {
     : "Todos";
 
   const torneosInscritos = new Set<string>();
-  let userLoggedIn = false;
+  let isAuthenticated = false;
+  let userRole: "jugador" | "tienda" | "admin" | null = null;
 
   try {
-    const res = await fetch(`${baseUrl}/api/inscripciones/me`, {
+    const meResponse = await fetch(`${baseUrl}/api/auth/me`, {
       cache: "no-store",
       headers: authHeaders,
     });
 
-    if (res.ok) {
-      userLoggedIn = true;
-      const { data } = (await res.json()) as { data: InscripcionEntry[] | null };
+    if (meResponse.ok) {
+      const { data } = (await meResponse.json()) as {
+        data: { profile: { user_role: "jugador" | "tienda" | "admin" | null } | null };
+      };
+      isAuthenticated = true;
+      userRole = data.profile?.user_role ?? null;
+    }
+
+    if (userRole === "jugador") {
+      const entriesResponse = await fetch(`${baseUrl}/api/inscripciones/me`, {
+        cache: "no-store",
+        headers: authHeaders,
+      });
+
+      if (!entriesResponse.ok) throw new Error("entries-load-failed");
+
+      const { data } = (await entriesResponse.json()) as { data: InscripcionEntry[] | null };
       (data ?? []).forEach((entry) => {
         if (
           entry.entry_type === "solo" &&
@@ -253,7 +271,6 @@ export default async function TorneosPage({ searchParams }: TorneosPageProps) {
               <span className="min-w-0 flex-1 text-sm font-medium sm:text-base">
                 Filtra por juego, formato o ciudad para encontrar el evento correcto.
               </span>
-              <kbd className="hidden rounded border border-zinc-200 px-2 py-1 text-xs text-zinc-500 sm:inline-flex">/</kbd>
             </div>
             <div className="flex min-w-0 flex-wrap gap-2">
               <span className="ui-chip ui-chip-active">
@@ -279,6 +296,7 @@ export default async function TorneosPage({ searchParams }: TorneosPageProps) {
         ) : null}
 
         <TorneosFilters
+          key={`${juego}:${categoria}:${ciudad}`}
           initialValues={{
             juego,
             categoria,
@@ -308,7 +326,8 @@ export default async function TorneosPage({ searchParams }: TorneosPageProps) {
                   <TorneoCard
                     key={torneo.id}
                     torneo={torneo}
-                    canInscribirse={userLoggedIn}
+                    canInscribirse={userRole === "jugador"}
+                    isAuthenticated={isAuthenticated}
                     yaInscripto={torneosInscritos.has(torneo.id)}
                   />
                 ))}
@@ -339,6 +358,7 @@ export default async function TorneosPage({ searchParams }: TorneosPageProps) {
                       key={torneo.id}
                       torneo={torneo}
                       canInscribirse={false}
+                      isAuthenticated={isAuthenticated}
                       yaInscripto={torneosInscritos.has(torneo.id)}
                       isPast
                     />

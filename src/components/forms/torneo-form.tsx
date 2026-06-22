@@ -61,6 +61,16 @@ function resolveLookupSelection(
   );
 }
 
+function toLocalDateTimeInput(value?: string) {
+  if (!value) return "";
+
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) return "";
+
+  const localTime = new Date(date.getTime() - date.getTimezoneOffset() * 60_000);
+  return localTime.toISOString().slice(0, 16);
+}
+
 export function TorneoForm({ mode = "create", defaults }: TorneoFormProps) {
   const router = useRouter();
   const initialTcgJuego = defaults?.tcg_juego || "pokemon";
@@ -79,9 +89,7 @@ export function TorneoForm({ mode = "create", defaults }: TorneoFormProps) {
   const [direccion, setDireccion] = useState(defaults?.direccion || "");
   const [latitud, setLatitud] = useState(defaults?.latitud ?? null);
   const [longitud, setLongitud] = useState(defaults?.longitud ?? null);
-  const [fechaInicio, setFechaInicio] = useState(
-    defaults?.fecha_inicio ? new Date(defaults.fecha_inicio).toISOString().slice(0, 16) : "",
-  );
+  const [fechaInicio, setFechaInicio] = useState(toLocalDateTimeInput(defaults?.fecha_inicio));
   const [cupoMaximo, setCupoMaximo] = useState(defaults?.cupo_maximo ?? 32);
   const [costoEntrada, setCostoEntrada] = useState(defaults?.costo_entrada ?? 0);
   const [imagenUrl, setImagenUrl] = useState(defaults?.imagen_url || "");
@@ -148,6 +156,7 @@ export function TorneoForm({ mode = "create", defaults }: TorneoFormProps) {
     setFieldErrors({});
     setIsPending(true);
 
+    const parsedDate = new Date(fechaInicio);
     const payload: any = {
       titulo,
       descripcion,
@@ -156,7 +165,7 @@ export function TorneoForm({ mode = "create", defaults }: TorneoFormProps) {
       juego_id: juegoId,
       categoria_id: categoriaId,
       direccion,
-      fecha_inicio: fechaInicio,
+      fecha_inicio: Number.isFinite(parsedDate.getTime()) ? parsedDate.toISOString() : fechaInicio,
       cupo_maximo: Number(cupoMaximo),
       costo_entrada: Number(costoEntrada),
       publicado: publicar,
@@ -199,7 +208,7 @@ export function TorneoForm({ mode = "create", defaults }: TorneoFormProps) {
   return (
     <form onSubmit={handleSubmit} className="ui-card space-y-6 rounded-lg p-5 sm:p-6">
       {error ? (
-        <p className="ui-alert ui-alert-danger">
+        <p className="ui-alert ui-alert-danger" role="alert">
           {error}
         </p>
       ) : null}

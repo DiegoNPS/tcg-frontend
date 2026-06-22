@@ -2,7 +2,7 @@
 
 import { CalendarClock, ExternalLink, MapPin, Store, Ticket, Users } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 
 type TorneoCardModel = {
@@ -25,6 +25,7 @@ type TorneoCardModel = {
 type TorneoCardProps = {
   torneo: TorneoCardModel;
   canInscribirse: boolean;
+  isAuthenticated: boolean;
   yaInscripto: boolean;
   isPast?: boolean;
 };
@@ -37,11 +38,19 @@ const dateFormatter = new Intl.DateTimeFormat("es-CL", {
   minute: "2-digit",
 });
 
-export function TorneoCard({ torneo, canInscribirse, yaInscripto, isPast = false }: TorneoCardProps) {
+export function TorneoCard({ torneo, canInscribirse, isAuthenticated, yaInscripto, isPast = false }: TorneoCardProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [isPending, setIsPending] = useState(false);
   const fecha = new Date(torneo.fecha_inicio);
   const canRegister = canInscribirse && !yaInscripto && !isPast;
+
+  const buildNoticeHref = (code: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("torneo");
+    params.set("inscripcion", code);
+    return `/torneos?${params.toString()}`;
+  };
 
   const handleInscribirse = async () => {
     if (!canRegister) return;
@@ -54,39 +63,36 @@ export function TorneoCard({ torneo, canInscribirse, yaInscripto, isPast = false
         body: JSON.stringify({ torneo_id: torneo.id }),
       });
 
-      if (response.ok) {
-        router.push("/torneos?inscripcion=ok");
-      } else {
-        let code: string | undefined;
+      const payload = await response.json().catch(() => null);
 
-        try {
-          const data = await response.json();
-          if (data && typeof data.code === "string") {
-            code = data.code;
-          }
-        } catch {
-          code = undefined;
-        }
+      if (response.ok) {
+        const noticeCode = payload?.data?.status === "waitlisted" ? "espera" : "ok";
+        router.push(buildNoticeHref(noticeCode));
+      } else {
+        const code = typeof payload?.code === "string" ? payload.code : undefined;
 
         if (response.status === 401) {
           router.push(loginHref);
         } else if (code) {
-          router.push(`/torneos?inscripcion=${code}`);
+          router.push(buildNoticeHref(code));
         } else if (response.status === 409) {
-          router.push("/torneos?inscripcion=existente");
+          router.push(buildNoticeHref("existente"));
         } else if (response.status === 403) {
-          router.push("/torneos?inscripcion=no-jugador");
+          router.push(buildNoticeHref("no-jugador"));
         } else {
-          router.push("/torneos?inscripcion=error");
+          router.push(buildNoticeHref("error"));
         }
       }
     } catch {
-      router.push("/torneos?inscripcion=error");
+      router.push(buildNoticeHref("error"));
     } finally {
       setIsPending(false);
     }
   };
-  const loginHref = `/login?next=${encodeURIComponent(`/torneos?torneo=${torneo.id}`)}`;
+  const returnParams = new URLSearchParams(searchParams.toString());
+  returnParams.delete("inscripcion");
+  returnParams.set("torneo", torneo.id);
+  const loginHref = `/login?next=${encodeURIComponent(`/torneos?${returnParams.toString()}`)}`;
   const latitud = torneo.latitud ?? null;
   const longitud = torneo.longitud ?? null;
   const hasCoordinates = typeof latitud === "number" && typeof longitud === "number";
@@ -182,15 +188,22 @@ export function TorneoCard({ torneo, canInscribirse, yaInscripto, isPast = false
               onClick={handleInscribirse}
               disabled={isPending}
               className="ui-button-primary w-full"
+              aria-busy={isPending}
             >
               {isPending ? "Inscribiendo..." : "Inscribirme"}
             </button>
           ) : null}
 
-          {!canInscribirse && !isPast ? (
+          {!isAuthenticated && !isPast ? (
             <Link href={loginHref} className="ui-button-ghost w-full">
               Inicia sesión para inscribirte
             </Link>
+          ) : null}
+
+          {isAuthenticated && !canInscribirse && !isPast ? (
+            <p className="ui-alert ui-alert-warning text-center text-xs">
+              Solo las cuentas de jugador pueden inscribirse.
+            </p>
           ) : null}
         </div>
       </div>

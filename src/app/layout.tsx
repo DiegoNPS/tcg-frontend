@@ -22,9 +22,14 @@ export default function RootLayout({
       className="h-full antialiased"
     >
       <body className="min-h-full bg-background text-foreground">
+        <a href="#main-content" className="ui-skip-link">
+          Saltar al contenido principal
+        </a>
         <div className="flex min-h-full flex-col">
           <Navbar />
-          <div className="flex flex-1 flex-col">{children}</div>
+          <div id="main-content" tabIndex={-1} className="flex flex-1 flex-col">
+            {children}
+          </div>
         </div>
       </body>
     </html>

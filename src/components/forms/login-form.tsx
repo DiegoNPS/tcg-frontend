@@ -4,11 +4,11 @@ import { Mail, Send, ShieldCheck, KeyRound } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-import { AUTH_CALLBACK_PATH } from "@/lib/auth/routes";
+import { AUTH_CALLBACK_PATH, DEFAULT_POST_LOGIN_PATH } from "@/lib/auth/routes";
 import { createClient } from "@/lib/supabase/client";
 
 type LoginFormProps = {
-  nextPath: string;
+  nextPath?: string;
 };
 
 export function LoginForm({ nextPath }: LoginFormProps) {
@@ -21,7 +21,7 @@ export function LoginForm({ nextPath }: LoginFormProps) {
   const buildCallbackUrl = () => {
     const base = process.env.NEXT_PUBLIC_APP_URL ?? window.location.origin;
     const callbackUrl = new URL(AUTH_CALLBACK_PATH, base);
-    callbackUrl.searchParams.set("next", nextPath);
+    if (nextPath) callbackUrl.searchParams.set("next", nextPath);
     return callbackUrl.toString();
   };
 
@@ -61,6 +61,7 @@ export function LoginForm({ nextPath }: LoginFormProps) {
         body: JSON.stringify({
           email: email.trim(),
           password,
+          nextPath,
         }),
       });
 
@@ -72,7 +73,7 @@ export function LoginForm({ nextPath }: LoginFormProps) {
       }
 
       const payload = await response.json();
-      router.replace(payload.redirectTo || nextPath);
+      router.replace(payload.redirectTo || nextPath || DEFAULT_POST_LOGIN_PATH);
       router.refresh();
     } catch {
       setMessage("Error de conexión. Intenta nuevamente.");
@@ -146,7 +147,7 @@ export function LoginForm({ nextPath }: LoginFormProps) {
         </button>
       </form>
 
-      {message ? <p className="ui-alert ui-alert-warning">{message}</p> : null}
+      {message ? <p className="ui-alert ui-alert-warning" role="alert">{message}</p> : null}
     </div>
   );
 }
