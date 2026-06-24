@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:acceptance": "playwright test",
+    "test:acceptance:ui": "playwright test --ui"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.2",
@@ -19,6 +21,7 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@playwright/test": "^1.61.1",
     "@tailwindcss/postcss": "^4",
     "@types/google.maps": "^3.64.1",
     "@types/node": "^20",

@@ -39,7 +39,12 @@ npm run build
 npm run start
 npm run lint
 npm run typecheck
+npm run test:acceptance     # Playwright + Chromium
+npm run test:acceptance:ui  # modo interactivo
 ```
+
+Las pruebas de aceptación levantan un backend local simulado, por lo que no
+crean datos ni requieren una conexión real a Supabase.
 
 ## Como consume el backend
 
