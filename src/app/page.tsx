@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { GameCarousel } from "@/components/home/game-carousel";
 import { resolveServerApiBaseUrl } from "@/lib/api/base-url";
+import { fetchMe, type MePayload } from "@/lib/auth/fetch-me";
 import { TCG_OPTIONS } from "@/lib/constants";
 
 type TorneoApiItem = {
@@ -47,11 +48,37 @@ const dateFormatter = new Intl.DateTimeFormat("es-CL", {
   minute: "2-digit",
 });
 
-const quickLinks: { label: string; href: string; Icon: LucideIcon }[] = [
-  { label: "Publicar evento", href: "/tienda/nuevo-torneo", Icon: Store },
-  { label: "Panel de tienda", href: "/tienda/dashboard", Icon: Trophy },
-  { label: "Mis inscripciones", href: "/jugador/inscripciones", Icon: UserRound },
-];
+type QuickLink = { label: string; href: string; Icon: LucideIcon };
+
+function getQuickLinks(me: MePayload | null): QuickLink[] {
+  const isAdmin = me?.profile?.user_role === "admin";
+
+  if (isAdmin) {
+    return [
+      { label: "Publicar evento", href: "/tienda/nuevo-torneo", Icon: Store },
+      { label: "Administración", href: "/admin", Icon: Trophy },
+    ];
+  }
+
+  if (me?.isTienda) {
+    return [
+      { label: "Publicar evento", href: "/tienda/nuevo-torneo", Icon: Store },
+      { label: "Panel de tienda", href: "/tienda/dashboard", Icon: Trophy },
+    ];
+  }
+
+  if (me?.profile?.user_role === "jugador") {
+    return [
+      { label: "Mis inscripciones", href: "/jugador/inscripciones", Icon: UserRound },
+      { label: "Mi perfil", href: "/jugador/perfil", Icon: UserRound },
+    ];
+  }
+
+  return [
+    { label: "Explorar eventos", href: "/torneos", Icon: Search },
+    { label: "Crear cuenta", href: "/signup", Icon: UserRound },
+  ];
+}
 
 const gameLabelByValue = new Map<string, string>(TCG_OPTIONS.map((option) => [option.value, option.label]));
 
@@ -60,7 +87,11 @@ export default async function HomePage() {
   const storageBase = supabaseUrl
     ? `${supabaseUrl.replace(/\/$/, "")}/storage/v1/object/public/tcg`
     : "";
-  const upcomingTorneos = await fetchUpcomingTorneos();
+  const [upcomingTorneos, me] = await Promise.all([
+    fetchUpcomingTorneos(),
+    fetchMe(),
+  ]);
+  const quickLinks = getQuickLinks(me);
   const gameCounts = new Map<string, number>();
   upcomingTorneos.forEach((torneo) => {
     if (torneo.tcg_juego) {

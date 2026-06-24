@@ -309,6 +309,7 @@ textarea:focus-visible {
   font-size: 0.75rem;
   font-weight: 700;
   color: #d7e0e7;
+  white-space: nowrap;
 }
 
 .ui-badge-accent {
@@ -321,6 +322,12 @@ textarea:focus-visible {
   border-color: rgba(244, 185, 66, 0.58);
   background: rgba(244, 185, 66, 0.12);
   color: #ffe1a1;
+}
+
+.ui-badge-success {
+  border-color: rgba(52, 211, 153, 0.52);
+  background: rgba(52, 211, 153, 0.1);
+  color: #a7f3d0;
 }
 
 .ui-alert {

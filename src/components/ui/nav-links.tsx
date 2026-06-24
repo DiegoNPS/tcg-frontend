@@ -12,8 +12,13 @@ type NavLinksProps = {
 
 const publicLinks = [
   { href: "/torneos", label: "Eventos", Icon: Ticket },
-  { href: "/tienda/nuevo-torneo", label: "Publicar evento", Icon: PlusCircle },
 ];
+
+const publishLink = {
+  href: "/tienda/nuevo-torneo",
+  label: "Publicar evento",
+  Icon: PlusCircle,
+};
 
 function isCurrentPath(pathname: string, href: string) {
   if (href === "/torneos") return pathname === href;
@@ -24,6 +29,7 @@ export function NavLinks({ isAdmin, isJugador, isTienda }: NavLinksProps) {
   const pathname = usePathname();
   const links = [
     ...publicLinks,
+    ...(isTienda || isAdmin ? [publishLink] : []),
     ...(isTienda
       ? [{ href: "/tienda/dashboard", label: "Panel de tienda", Icon: Store }]
       : []),
