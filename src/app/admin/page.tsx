@@ -20,6 +20,7 @@ import {
   PublishTournamentButton,
 } from "@/components/admin/admin-actions";
 import { AdminGameForm } from "@/components/forms/admin-game-form";
+import { DeleteTorneoButton } from "@/components/torneos/delete-torneo-button";
 import { resolveServerApiBaseUrl } from "@/lib/api/base-url";
 import { requireAdmin } from "@/lib/auth/guards";
 
@@ -272,7 +273,14 @@ export default async function AdminPage() {
                         {tournament.tienda_nombre} · {formatDate(tournament.fecha_inicio)}
                       </p>
                     </div>
-                    <PublishTournamentButton tournamentId={tournament.id} />
+                    <div className="flex flex-wrap items-start gap-2 sm:justify-end">
+                      <PublishTournamentButton tournamentId={tournament.id} />
+                      <DeleteTorneoButton
+                        endpoint={`/api/admin/torneos/${tournament.id}`}
+                        title={tournament.titulo}
+                        compact
+                      />
+                    </div>
                   </li>
                 ))}
               </ul>
@@ -339,9 +347,16 @@ export default async function AdminPage() {
                       {tournament.tienda_nombre} · {formatDate(tournament.fecha_inicio)}
                     </p>
                   </div>
-                  <span className={tournament.publicado ? "ui-badge ui-badge-success" : "ui-badge ui-badge-warning"}>
-                    {tournament.publicado ? "Publicado" : "Borrador"}
-                  </span>
+                  <div className="flex shrink-0 flex-wrap items-start justify-end gap-2">
+                    <span className={tournament.publicado ? "ui-badge ui-badge-success" : "ui-badge ui-badge-warning"}>
+                      {tournament.publicado ? "Publicado" : "Borrador"}
+                    </span>
+                    <DeleteTorneoButton
+                      endpoint={`/api/admin/torneos/${tournament.id}`}
+                      title={tournament.titulo}
+                      compact
+                    />
+                  </div>
                 </li>
                 ))}
               </ul>

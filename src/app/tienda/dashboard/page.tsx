@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Pencil } from "lucide-react";
 import { cookies } from "next/headers";
 
+import { DeleteTorneoButton } from "@/components/torneos/delete-torneo-button";
 import { resolveServerApiBaseUrl } from "@/lib/api/base-url";
 import { requireAuthenticatedUser } from "@/lib/auth/guards";
 
@@ -166,15 +167,22 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                   <p className="font-medium text-zinc-900">{torneo.titulo}</p>
                   <p className="text-zinc-600">{torneo.tcg_juego} / {torneo.categoria} / {torneo.ciudad}</p>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center gap-3 md:justify-end">
                   <p className="text-zinc-500">{new Date(torneo.fecha_inicio).toLocaleString("es-ES")}</p>
-                  <Link
-                    href={`/tienda/torneos/${torneo.id}/editar`}
-                    className="ui-button-ghost min-h-0 px-2.5 py-1.5 text-xs"
-                  >
-                    <Pencil size={12} />
-                    Editar
-                  </Link>
+                  <div className="flex flex-wrap items-start gap-2 md:justify-end">
+                    <Link
+                      href={`/tienda/torneos/${torneo.id}/editar`}
+                      className="ui-button-ghost min-h-0 px-2.5 py-1.5 text-xs"
+                    >
+                      <Pencil size={12} />
+                      Editar
+                    </Link>
+                    <DeleteTorneoButton
+                      endpoint={`/api/tiendas/me/torneos/${torneo.id}`}
+                      title={torneo.titulo}
+                      compact
+                    />
+                  </div>
                 </div>
               </article>
             ))
